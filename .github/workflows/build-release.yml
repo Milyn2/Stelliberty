@@ -282,20 +282,14 @@ jobs:
           
           Write-Host "✅ 所有依赖安装完成"
 
-      - name: 安装 Inno Setup
-        shell: pwsh
-        run: |
-          Write-Host "🔧 正在安装 Inno Setup..."
-          dart run scripts/prebuild.dart --installer
-
       - name: 运行预构建脚本
         id: prebuild
         shell: pwsh
         run: |
-          Write-Host "🔧 正在运行预构建脚本..."
+          Write-Host "🔧 正在运行预构建脚本（包含 Inno Setup 安装）..."
           
           # 捕获预构建脚本的输出
-          $output = dart run scripts/prebuild.dart 2>&1 | Tee-Object -Variable prebuildOutput
+          $output = dart run scripts/prebuild.dart --installer 2>&1 | Tee-Object -Variable prebuildOutput
           
           # 从输出中提取 Mihomo 版本号
           $versionLine = $prebuildOutput | Select-String -Pattern "找到核心:.*版本号:\s*v([\d\.]+)" | Select-Object -First 1

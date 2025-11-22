@@ -162,17 +162,11 @@ jobs:
           
           Write-Host "✅ 所有依赖安装完成"
 
-      - name: 安装 Inno Setup
-        shell: pwsh
-        run: |
-          Write-Host "🔧 正在安装 Inno Setup..."
-          dart run scripts/prebuild.dart --installer
-
       - name: 运行预构建脚本
         shell: pwsh
         run: |
-          Write-Host "🔧 正在运行预构建脚本..."
-          dart run scripts/prebuild.dart
+          Write-Host "🔧 正在运行预构建脚本（包含 Inno Setup 安装）..."
+          dart run scripts/prebuild.dart --installer
 
       - name: 生成 Rust 桥接代码
         run: rinf gen
