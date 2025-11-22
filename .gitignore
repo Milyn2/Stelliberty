@@ -1,0 +1,92 @@
+# ============================================================
+# 杂项文件
+# ============================================================
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# ============================================================
+# IDE 相关
+# ============================================================
+# IntelliJ IDEA
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# ============================================================
+# Flutter/Dart/Pub 相关
+# ============================================================
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+/scripts/.dart_tool/
+**/pubspec.lock
+
+# 代码生成文件
+**/*.g.dart
+**/*.freezed.dart
+
+# Rinf 自动生成的绑定文件
+/lib/src/bindings/
+
+# Slang 自动生成的 i18n 文件（保留 locales 源文件）
+/lib/i18n/*.dart
+
+# 符号化相关
+app.*.symbols
+
+# 混淆相关
+app.*.map.json
+
+# ============================================================
+# 平台构建产物
+# ============================================================
+# Android Studio
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Windows
+*.exe
+*.pdb
+*.dll
+*.lib
+*.exp
+
+# ============================================================
+# Rust 相关
+# ============================================================
+**/target/
+**/Cargo.lock
+
+# ============================================================
+# 项目特定文件
+# ============================================================
+# Clash Core 数据文件（由 prebuild.dart 自动下载）
+/assets/clash-core/data/
+
+# 托盘图标（由 prebuild.dart 自动复制）
+/assets/icons/
+
+# 测试文件
+/assets/test/*
+

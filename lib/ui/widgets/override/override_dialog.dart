@@ -1,0 +1,1161 @@
+import 'dart:io';
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:desktop_drop/desktop_drop.dart';
+import 'package:stelliberty/clash/data/override_model.dart';
+import 'package:stelliberty/clash/data/subscription_model.dart';
+import 'package:stelliberty/utils/logger.dart';
+import 'package:stelliberty/i18n/i18n.dart';
+import 'package:stelliberty/ui/widgets/modern_toast.dart';
+
+// 覆写添加方式枚举
+enum OverrideAddMethod {
+  // 远程 URL 下载
+  remote,
+
+  // 新建空白文件
+  create,
+
+  // 导入本地文件
+  import,
+}
+
+// 覆写对话框组件 - 毛玻璃风格
+class OverrideDialog extends StatefulWidget {
+  final OverrideConfig? editingOverride;
+  final Future<bool> Function(OverrideConfig)? onConfirm;
+
+  const OverrideDialog({super.key, this.editingOverride, this.onConfirm});
+
+  static Future<OverrideConfig?> show(
+    BuildContext context, {
+    OverrideConfig? editingOverride,
+    Future<bool> Function(OverrideConfig)? onConfirm,
+  }) {
+    return showDialog<OverrideConfig>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => OverrideDialog(
+        editingOverride: editingOverride,
+        onConfirm: onConfirm,
+      ),
+    );
+  }
+
+  @override
+  State<OverrideDialog> createState() => _OverrideDialogState();
+}
+
+class _OverrideDialogState extends State<OverrideDialog>
+    with TickerProviderStateMixin {
+  late final TextEditingController _nameController;
+  late final TextEditingController _urlController;
+  late OverrideFormat _format;
+  late SubscriptionProxyMode _proxyMode;
+
+  // 覆写添加方式
+  OverrideAddMethod _addMethod = OverrideAddMethod.remote;
+
+  File? _selectedFile;
+  String? _selectedFileName;
+  bool _isDragging = false;
+  bool _isLoading = false;
+
+  late final AnimationController _animationController;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _opacityAnimation;
+
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _nameController = TextEditingController(
+      text: widget.editingOverride?.name ?? '',
+    );
+    _urlController = TextEditingController(
+      text: widget.editingOverride?.url ?? '',
+    );
+    _format = widget.editingOverride?.format ?? OverrideFormat.yaml;
+    _proxyMode =
+        widget.editingOverride?.proxyMode ?? SubscriptionProxyMode.direct;
+
+    // 根据编辑的覆写类型初始化添加方式
+    if (widget.editingOverride != null) {
+      _addMethod = widget.editingOverride!.type == OverrideType.remote
+          ? OverrideAddMethod.remote
+          : OverrideAddMethod.import; // 本地文件（已存在的）
+    }
+
+    // 初始化动画
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _animationController.forward();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _urlController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      type: MaterialType.transparency,
+      child: AnimatedBuilder(
+        animation: _animationController,
+        builder: (context, child) {
+          return Stack(
+            children: [
+              // 背景遮罩
+              Container(
+                color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.3),
+              ),
+              // 对话框内容
+              Center(
+                child: Transform.scale(
+                  scale: _scaleAnimation.value,
+                  child: Opacity(
+                    opacity: _opacityAnimation.value,
+                    child: _buildDialog(),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDialog() {
+    final isEditing = widget.editingOverride != null;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: 720,
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 32),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.white.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.3),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.18),
+                    blurRadius: 40,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeader(isEditing),
+                  Flexible(child: _buildContent(isEditing)),
+                  _buildActions(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(bool isEditing) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.white.withValues(alpha: 0.3),
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.3),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(
+              isEditing ? Icons.edit : Icons.add_circle_outline,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isEditing
+                      ? context.translate.overrideDialog.editOverrideTitle
+                      : context.translate.overrideDialog.addOverrideTitle,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isEditing ? '编辑现有覆写配置' : '可远程下载或本地导入配置文件',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _isLoading ? null : _handleCancel,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.close,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(bool isEditing) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isEditing) ...[
+              _buildAddModeSelector(),
+              const SizedBox(height: 20),
+            ],
+
+            _buildTextField(
+              controller: _nameController,
+              label: context.translate.kOverride.nameLabel,
+              hint: context.translate.kOverride.nameHint,
+              icon: Icons.label_outline,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return context.translate.kOverride.nameError;
+                }
+                return null;
+              },
+            ),
+
+            // 编辑模式下不显示格式选择器（格式不可改变）
+            if (!isEditing) ...[
+              const SizedBox(height: 20),
+              _buildFormatSelector(),
+            ],
+
+            // 仅在添加模式或远程覆写模式显示相应字段
+            if (_addMethod == OverrideAddMethod.remote) ...[
+              const SizedBox(height: 20),
+              _buildTextField(
+                controller: _urlController,
+                label: 'URL',
+                hint: 'https://example.com/override.yaml',
+                icon: Icons.link,
+                maxLines: 2,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return context.translate.kOverride.urlError;
+                  }
+                  final uri = Uri.tryParse(value.trim());
+                  if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+                    return context.translate.kOverride.urlFormatError;
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildProxyModeSection(),
+            ] else if (_addMethod == OverrideAddMethod.import &&
+                !isEditing) ...[
+              const SizedBox(height: 20),
+              _buildFileSelector(),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : Colors.white.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
+          ),
+        ),
+        child: TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          validator: validator,
+          decoration: InputDecoration(
+            labelText: label,
+            hintText: hint,
+            prefixIcon: Icon(icon, size: 16),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            labelStyle: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+              fontSize: 14,
+            ),
+            hintStyle: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddModeSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : Colors.white.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.folder,
+                  color: Theme.of(context).colorScheme.secondary,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.translate.kOverride.addMethodTitle,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildAddMethodOption(
+                    method: OverrideAddMethod.remote,
+                    icon: Icons.cloud,
+                    label: context.translate.kOverride.addMethodRemote,
+                    description:
+                        context.translate.kOverride.addMethodRemoteDesc,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildAddMethodOption(
+                    method: OverrideAddMethod.create,
+                    icon: Icons.add,
+                    label: context.translate.kOverride.addMethodCreate,
+                    description:
+                        context.translate.kOverride.addMethodCreateDesc,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildAddMethodOption(
+                    method: OverrideAddMethod.import,
+                    icon: Icons.folder_open,
+                    label: context.translate.kOverride.addMethodImport,
+                    description:
+                        context.translate.kOverride.addMethodImportDesc,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddMethodOption({
+    required OverrideAddMethod method,
+    required IconData icon,
+    required String label,
+    required String description,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isSelected = _addMethod == method;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => setState(() => _addMethod = method),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: isSelected
+                ? Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  )
+                : Border.all(
+                    color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
+                  ),
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+                : (isDark
+                      ? Colors.white.withValues(alpha: 0.02)
+                      : Colors.white.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormatSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : Colors.white.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.code,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.translate.kOverride.formatTitle,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _buildFormatOption(OverrideFormat.yaml)),
+                const SizedBox(width: 12),
+                Expanded(child: _buildFormatOption(OverrideFormat.js)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 构建代理模式选择区域（仅远程覆写显示）
+  Widget _buildProxyModeSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : Colors.white.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.public,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  context.translate.kOverride.proxyModeTitle,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ...SubscriptionProxyMode.values.map((mode) {
+              final isSelected = _proxyMode == mode;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () {
+                      setState(() => _proxyMode = mode);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: isSelected
+                            ? Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              )
+                            : Border.all(
+                                color: Colors.white.withValues(
+                                  alpha: isDark ? 0.1 : 0.2,
+                                ),
+                              ),
+                        color: isSelected
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.08)
+                            : (isDark
+                                  ? Colors.white.withValues(alpha: 0.02)
+                                  : Colors.white.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isSelected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_unchecked,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.4),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  mode.displayName,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _getProxyModeDescription(mode),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 获取代理模式描述
+  String _getProxyModeDescription(SubscriptionProxyMode mode) {
+    switch (mode) {
+      case SubscriptionProxyMode.direct:
+        return context.translate.kOverride.proxyModeDirect;
+      case SubscriptionProxyMode.system:
+        return context.translate.kOverride.proxyModeSystem;
+      case SubscriptionProxyMode.core:
+        return context.translate.kOverride.proxyModeCore;
+    }
+  }
+
+  Widget _buildFormatOption(OverrideFormat format) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isSelected = _format == format;
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => setState(() => _format = format),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: isSelected
+                ? Border.all(
+                    color: Theme.of(context).colorScheme.primary,
+                    width: 2,
+                  )
+                : Border.all(
+                    color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.2),
+                  ),
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+                : (isDark
+                      ? Colors.white.withValues(alpha: 0.02)
+                      : Colors.white.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  format.displayName,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFileSelector() {
+    return DropTarget(
+      onDragEntered: (details) => setState(() => _isDragging = true),
+      onDragExited: (details) => setState(() => _isDragging = false),
+      onDragDone: (details) async {
+        setState(() => _isDragging = false);
+        if (details.files.isNotEmpty) {
+          final file = File(details.files.first.path);
+          if (await file.exists()) {
+            setState(() {
+              _selectedFile = file;
+              _selectedFileName = details.files.first.name;
+            });
+          }
+        }
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _selectFile,
+          child: Container(
+            decoration: BoxDecoration(
+              color: _isDragging
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                  : Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _isDragging
+                    ? Theme.of(context).colorScheme.primary
+                    : (_selectedFile != null
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.5)
+                          : Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.2)),
+                width: _isDragging || _selectedFile != null ? 2 : 1,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Row(
+                children: [
+                  Icon(
+                    _isDragging
+                        ? Icons.file_download
+                        : (_selectedFile != null
+                              ? Icons.check_circle
+                              : Icons.upload_file),
+                    size: 20,
+                    color: _isDragging || _selectedFile != null
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isDragging
+                              ? context.translate.kOverride.fileSelectPrompt
+                              : (_selectedFile != null
+                                    ? context.translate.kOverride.fileSelected
+                                    : context
+                                          .translate
+                                          .kOverride
+                                          .selectLocalFile),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontSize: 16,
+                            fontWeight: _selectedFile != null || _isDragging
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _selectedFile != null
+                              ? _selectedFileName ??
+                                    context.translate.kOverride.unknownFile
+                              : context.translate.kOverride.clickOrDrag,
+                          style: TextStyle(
+                            color: _selectedFile != null || _isDragging
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _selectedFile != null ? Icons.edit : Icons.folder_open,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        if (await file.exists()) {
+          setState(() {
+            _selectedFile = file;
+            _selectedFileName = result.files.single.name;
+          });
+        }
+      }
+    } catch (error) {
+      Logger.debug('文件选择失败: $error');
+    }
+  }
+
+  Widget _buildActions() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : Colors.white.withValues(alpha: 0.3),
+          border: Border(
+            top: BorderSide(
+              color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.3),
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            OutlinedButton(
+              onPressed: _isLoading ? null : _handleCancel,
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                side: BorderSide(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.2)
+                      : Colors.white.withValues(alpha: 0.6),
+                ),
+                backgroundColor: isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : Colors.white.withValues(alpha: 0.6),
+              ),
+              child: Text(
+                context.translate.common.cancel,
+                style: TextStyle(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _handleConfirm,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+                shadowColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.5),
+              ),
+              child: _isLoading
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(context.translate.common.ok),
+                        const SizedBox(width: 12),
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text(context.translate.common.ok),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleCancel() {
+    _animationController.reverse().then((_) {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
+  Future<void> _handleConfirm() async {
+    Logger.info('_handleConfirm 被调用');
+    Logger.info('编辑模式: ${widget.editingOverride != null}');
+    Logger.info('名称: ${_nameController.text}');
+
+    if (!_formKey.currentState!.validate()) {
+      Logger.warning('表单验证失败');
+      return;
+    }
+
+    // 验证导入模式时是否选择了文件（仅在添加模式检查）
+    if (widget.editingOverride == null &&
+        _addMethod == OverrideAddMethod.import &&
+        _selectedFile == null) {
+      Logger.warning('导入模式但未选择文件');
+      return;
+    }
+
+    Logger.info('表单验证通过，继续处理...');
+
+    final override = widget.editingOverride != null
+        ? widget.editingOverride!.copyWith(
+            name: _nameController.text.trim(),
+            // 编辑模式：只更新名称，不更新其他字段
+          )
+        : OverrideConfig(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            name: _nameController.text.trim(),
+            type: _addMethod == OverrideAddMethod.remote
+                ? OverrideType.remote
+                : OverrideType.local,
+            format: _format,
+            url: _addMethod == OverrideAddMethod.remote
+                ? _urlController.text.trim()
+                : null,
+            localPath: _addMethod == OverrideAddMethod.import
+                ? _selectedFile?.path
+                : null,
+            content: _addMethod == OverrideAddMethod.create
+                ? ''
+                : null, // 新建时创建空内容
+            proxyMode: _addMethod == OverrideAddMethod.remote
+                ? _proxyMode
+                : SubscriptionProxyMode.direct,
+          );
+
+    Logger.info('创建的覆写对象: ${override.name}, ID: ${override.id}');
+
+    // 如果有 onConfirm 回调（添加模式），执行异步操作
+    if (widget.onConfirm != null) {
+      Logger.info('添加模式：执行 onConfirm 回调');
+      setState(() => _isLoading = true);
+
+      try {
+        final success = await widget.onConfirm!(override);
+        Logger.info('onConfirm 回调结果: $success');
+
+        if (!mounted) return;
+
+        if (success) {
+          // 成功后关闭对话框
+          Logger.info('添加成功，关闭对话框');
+          await _animationController.reverse();
+          if (mounted) {
+            Navigator.of(context).pop(override);
+          }
+        } else {
+          // 失败时显示错误并保持对话框打开
+          Logger.warning('添加失败');
+          setState(() => _isLoading = false);
+          if (mounted) {
+            ModernToast.error(
+              context,
+              context.translate.kOverride.addFailed.replaceAll(
+                '{error}',
+                override.name,
+              ),
+            );
+          }
+        }
+      } catch (error) {
+        Logger.error('添加时发生异常: $error');
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        ModernToast.error(
+          context,
+          context.translate.kOverride.addFailed.replaceAll(
+            '{error}',
+            error.toString(),
+          ),
+        );
+      }
+    } else {
+      // 编辑模式，直接返回
+      Logger.info('编辑模式：直接返回配置对象');
+      await _animationController.reverse();
+      if (mounted) {
+        Logger.info('关闭对话框并返回: ${override.name}');
+        Navigator.of(context).pop(override);
+      }
+    }
+    Logger.info('_handleConfirm 完成');
+  }
+}

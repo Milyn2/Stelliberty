@@ -1,0 +1,235 @@
+// 订阅更新代理模式
+enum SubscriptionProxyMode {
+  // 直连，不使用代理
+  direct('direct', '直连'),
+
+  // 使用系统代理
+  system('system', '系统代理'),
+
+  // 使用 Clash 核心代理（自举）
+  core('core', '核心代理');
+
+  const SubscriptionProxyMode(this.value, this.displayName);
+
+  final String value;
+  final String displayName;
+
+  static SubscriptionProxyMode fromString(String value) {
+    for (final mode in SubscriptionProxyMode.values) {
+      if (mode.value == value) return mode;
+    }
+    return SubscriptionProxyMode.direct;
+  }
+}
+
+// 订阅信息（流量统计）
+class SubscriptionInfo {
+  final int upload; // 已上传（字节）
+  final int download; // 已下载（字节）
+  final int total; // 总流量（字节）
+  final int expire; // 过期时间（Unix 时间戳）
+
+  const SubscriptionInfo({
+    this.upload = 0,
+    this.download = 0,
+    this.total = 0,
+    this.expire = 0,
+  });
+
+  // 从 HTTP 响应头解析订阅信息
+  // 格式: "upload=1234; download=5678; total=10000; expire=1234567890"
+  factory SubscriptionInfo.fromHeader(String? header) {
+    if (header == null || header.isEmpty) {
+      return const SubscriptionInfo();
+    }
+
+    final parts = header.split(';');
+    final Map<String, int> data = {};
+
+    for (final part in parts) {
+      final keyValue = part.trim().split('=');
+      if (keyValue.length == 2) {
+        data[keyValue[0].trim()] = int.tryParse(keyValue[1].trim()) ?? 0;
+      }
+    }
+
+    return SubscriptionInfo(
+      upload: data['upload'] ?? 0,
+      download: data['download'] ?? 0,
+      total: data['total'] ?? 0,
+      expire: data['expire'] ?? 0,
+    );
+  }
+
+  // 已使用流量（字节）
+  int get used => upload + download;
+
+  // 剩余流量（字节）
+  int get remaining => total > 0 ? total - used : 0;
+
+  // 流量使用百分比（0-100）
+  double get usagePercentage => total > 0 ? (used / total * 100) : 0;
+
+  // 是否已过期
+  bool get isExpired {
+    if (expire <= 0) return false;
+    return DateTime.now().millisecondsSinceEpoch > expire * 1000;
+  }
+
+  Map<String, dynamic> toJson() => {
+    'upload': upload,
+    'download': download,
+    'total': total,
+    'expire': expire,
+  };
+
+  factory SubscriptionInfo.fromJson(Map<String, dynamic> json) {
+    return SubscriptionInfo(
+      upload: json['upload'] ?? 0,
+      download: json['download'] ?? 0,
+      total: json['total'] ?? 0,
+      expire: json['expire'] ?? 0,
+    );
+  }
+}
+
+// 订阅配置
+class Subscription {
+  final String id; // 唯一标识
+  final String name; // 订阅名称
+  final String url; // 订阅链接
+  final bool autoUpdate; // 是否自动更新
+  final Duration autoUpdateInterval; // 自动更新间隔
+  final DateTime? lastUpdateTime; // 上次更新时间
+  final SubscriptionInfo? info; // 订阅信息
+  final bool isUpdating; // 是否正在更新
+  final bool isLocalFile; // 是否为本地文件
+  final SubscriptionProxyMode proxyMode; // 订阅更新代理模式
+  final String? lastError; // 最后一次更新错误信息
+  final List<String> overrideIds; // 规则覆写ID列表
+  final List<String> failedOverrideIds; // 失败的覆写ID列表(启动失败时记录)
+
+  const Subscription({
+    required this.id,
+    required this.name,
+    required this.url,
+    this.autoUpdate = true,
+    this.autoUpdateInterval = const Duration(hours: 24),
+    this.lastUpdateTime,
+    this.info,
+    this.isUpdating = false,
+    this.isLocalFile = false,
+    this.proxyMode = SubscriptionProxyMode.direct,
+    this.lastError,
+    this.overrideIds = const [],
+    this.failedOverrideIds = const [],
+  });
+
+  // 创建新订阅
+  factory Subscription.create({required String name, required String url}) {
+    return Subscription(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name,
+      url: url,
+    );
+  }
+
+  // 是否需要更新
+  bool get needsUpdate {
+    // 如果未启用自动更新，则不需要更新
+    if (!autoUpdate) {
+      return false;
+    }
+    // 如果从未更新过，需要更新
+    if (lastUpdateTime == null) {
+      return true;
+    }
+    // 检查是否到了更新时间
+    final nextUpdateTime = lastUpdateTime!.add(autoUpdateInterval);
+    return DateTime.now().isAfter(nextUpdateTime);
+  }
+
+  // 获取配置文件路径
+  String getConfigPath(String baseDir) {
+    // 需要导入 path 包才能使用，但这里为了避免导入，使用平台无关的方式
+    // 使用 path.join 会更好，但需要在调用方处理
+    return '$baseDir/subscriptions/$id.yaml';
+  }
+
+  // 复制并修改属性
+  Subscription copyWith({
+    String? id,
+    String? name,
+    String? url,
+    bool? autoUpdate,
+    Duration? autoUpdateInterval,
+    DateTime? lastUpdateTime,
+    SubscriptionInfo? info,
+    bool? isUpdating,
+    bool? isLocalFile,
+    SubscriptionProxyMode? proxyMode,
+    String? lastError,
+    List<String>? overrideIds,
+    List<String>? failedOverrideIds,
+  }) {
+    return Subscription(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      url: url ?? this.url,
+      autoUpdate: autoUpdate ?? this.autoUpdate,
+      autoUpdateInterval: autoUpdateInterval ?? this.autoUpdateInterval,
+      lastUpdateTime: lastUpdateTime ?? this.lastUpdateTime,
+      info: info ?? this.info,
+      isUpdating: isUpdating ?? this.isUpdating,
+      isLocalFile: isLocalFile ?? this.isLocalFile,
+      proxyMode: proxyMode ?? this.proxyMode,
+      lastError: lastError,
+      overrideIds: overrideIds ?? this.overrideIds,
+      failedOverrideIds: failedOverrideIds ?? this.failedOverrideIds,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'url': url,
+    'autoUpdate': autoUpdate,
+    'autoUpdateInterval': autoUpdateInterval.inSeconds,
+    'lastUpdateTime': lastUpdateTime?.toIso8601String(),
+    'info': info?.toJson(),
+    'isLocalFile': isLocalFile,
+    'proxyMode': proxyMode.value,
+    'lastError': lastError,
+    'overrideIds': overrideIds,
+    'failedOverrideIds': failedOverrideIds,
+  };
+
+  factory Subscription.fromJson(Map<String, dynamic> json) {
+    return Subscription(
+      id: json['id'],
+      name: json['name'],
+      url: json['url'],
+      autoUpdate: json['autoUpdate'] ?? true,
+      autoUpdateInterval: Duration(
+        seconds: json['autoUpdateInterval'] ?? 86400,
+      ),
+      lastUpdateTime: json['lastUpdateTime'] != null
+          ? DateTime.parse(json['lastUpdateTime'])
+          : null,
+      info: json['info'] != null
+          ? SubscriptionInfo.fromJson(json['info'])
+          : null,
+      isLocalFile: json['isLocalFile'] ?? false,
+      proxyMode: SubscriptionProxyMode.fromString(
+        json['proxyMode'] ?? 'direct',
+      ),
+      lastError: json['lastError'],
+      overrideIds: (json['overrideIds'] as List?)?.cast<String>() ?? [],
+      failedOverrideIds:
+          (json['failedOverrideIds'] as List?)?.cast<String>() ?? [],
+    );
+  }
+
+  @override
+  String toString() => 'Subscription(id: $id, name: $name, url: $url)';
+}

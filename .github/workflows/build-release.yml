@@ -1,0 +1,458 @@
+name: 正式版构建
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号 (例如: 1.0.0)'
+        required: true
+        type: string
+      create_release:
+        description: '是否创建 GitHub Release'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  # ------------ 提前准备（读取包名 & 版本号） ------------
+  prepare:
+    name: 准备构建信息
+    runs-on: ubuntu-latest
+    outputs:
+      pkg: ${{ steps.pkg.outputs.pkg }}
+      version: ${{ steps.ver.outputs.version }}
+      tag: ${{ steps.tag.outputs.tag }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 读取 pubspec.yaml 包名
+        id: pkg
+        run: |
+          pkg=$(grep '^name:' pubspec.yaml | awk '{print $2}')
+          echo "🔍 检测到包名: $pkg"
+          if [ -z "$pkg" ]; then
+            echo "::error::无法从 pubspec.yaml 找到包名"
+            exit 1
+          fi
+          echo "pkg=$pkg" >> $GITHUB_OUTPUT
+
+      - name: 读取或生成版本号
+        id: ver
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            version="${{ github.event.inputs.version }}"
+            echo "📝 手动指定版本: $version"
+          else
+            raw=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+            version="${raw%%+*}"
+            echo "📦 从 pubspec.yaml 读取版本: $version"
+          fi
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: 确定 Tag 名称
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            tag="v${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            tag="${{ github.ref_name }}"
+          else
+            tag="v${{ steps.ver.outputs.version }}"
+          fi
+          echo "🏷️ Tag 名称: $tag"
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
+      - name: 验证版本一致性
+        run: |
+          tag_version="${{ steps.tag.outputs.tag }}"
+          
+          # 移除 tag 中的 'v' 前缀
+          tag_version_clean="${tag_version#v}"
+          
+          # 始终从 pubspec.yaml 读取实际版本号（不使用缓存的输出）
+          actual_pubspec_version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          
+          echo "🔍 版本对比："
+          echo "  Tag 版本:           $tag_version_clean"
+          echo "  pubspec.yaml 版本:  $actual_pubspec_version"
+          
+          if [ "$tag_version_clean" != "$actual_pubspec_version" ]; then
+            echo ""
+            echo "❌ 错误：版本号不一致！"
+            echo ""
+            echo "推送的 tag 版本 ($tag_version) 与 pubspec.yaml 中的实际版本 ($actual_pubspec_version) 不匹配。"
+            echo ""
+            echo "请执行以下操作之一："
+            echo "  1. 更新 pubspec.yaml 中的版本号为 $tag_version_clean"
+            echo "  2. 删除当前 tag 并推送正确的 tag: v$actual_pubspec_version"
+            echo ""
+            exit 1
+          fi
+          
+          echo "✅ 版本号验证通过"
+
+      - name: 生成更新日志
+        id: changelog
+        run: |
+          echo "📝 正在生成更新日志..."
+          echo ""
+          
+          current_tag="${{ steps.tag.outputs.tag }}"
+          
+          # 获取所有正式版 tag（按版本号降序）
+          all_release_tags=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true)
+          
+          # 排除当前 tag，获取上一个正式版
+          previous_tag=$(echo "$all_release_tags" | grep -v "^${current_tag}$" | head -n 1 || true)
+          
+          if [ -z "$previous_tag" ]; then
+            echo "⚠️  未找到上一个版本 tag，使用首个提交"
+            previous_tag=$(git rev-list --max-parents=0 HEAD)
+          fi
+          
+          echo "📍 版本范围: $previous_tag → $current_tag"
+          echo ""
+          
+          # 定义要忽略的文件路径模式
+          IGNORE_FILE_PATTERNS="^\.github/|^scripts/|\.yml$|\.yaml$|^README|^LICENSE|^\.gitignore|^\.metadata|^analysis_options\.yaml|^pubspec\.lock$"
+          
+          # 生成提交日志
+          {
+            echo "## 📋 更新日志"
+            echo ""
+            echo "自 $previous_tag 以来的功能和修复："
+            echo ""
+            echo "> 💡 已自动过滤 CI/Workflow/文档 相关的维护性提交"
+            echo ""
+
+            # 获取所有提交并处理
+            total_count=0
+            filtered_count=0
+            included_count=0
+            
+            # 获取所有提交哈希
+            commit_hashes=$(git rev-list $previous_tag..HEAD --no-merges)
+            
+            # 遍历每个提交
+            for hash in $commit_hashes; do
+              total_count=$((total_count + 1))
+              
+              # 获取提交涉及的文件列表
+              changed_files=$(git diff-tree --no-commit-id --name-only -r "$hash")
+              
+              # 检查是否所有文件都匹配忽略模式
+              should_ignore=true
+              for file in $changed_files; do
+                if ! echo "$file" | grep -qE "$IGNORE_FILE_PATTERNS"; then
+                  should_ignore=false
+                  break
+                fi
+              done
+              
+              # 如果所有文件都是要忽略的类型，跳过这个提交
+              if [ "$should_ignore" = true ]; then
+                filtered_count=$((filtered_count + 1))
+                continue
+              fi
+              
+              included_count=$((included_count + 1))
+              
+              # 获取提交信息（分别获取避免分隔符问题）
+              subject=$(git log -1 --pretty=format:"%s" "$hash")
+              author=$(git log -1 --pretty=format:"%an" "$hash")
+              time=$(git log -1 --pretty=format:"%ar" "$hash")
+              
+              # 输出格式化的提交信息
+              echo "### $subject"
+              echo ""
+              echo "**提交**: \`${hash:0:7}\` | **作者**: $author | **时间**: $time"
+              echo ""
+              
+              # 显示涉及的主要文件（排除忽略的文件）
+              main_files=""
+              for file in $changed_files; do
+                if ! echo "$file" | grep -qE "$IGNORE_FILE_PATTERNS"; then
+                  if [ -z "$main_files" ]; then
+                    main_files="$file"
+                  else
+                    main_files="$main_files, $file"
+                  fi
+                fi
+              done
+              
+              if [ -n "$main_files" ]; then
+                echo "**涉及文件**: $main_files"
+                echo ""
+              fi
+              
+              # 获取提交正文（如果有的话）
+              body=$(git log -1 --pretty=format:"%b" "$hash" | sed '/^$/d')
+              if [ -n "$body" ]; then
+                echo "$body"
+                echo ""
+              fi
+              
+              echo "---"
+              echo ""
+            done
+            
+            echo "---"
+            echo ""
+            echo "**统计信息**"
+            echo "- 📊 总提交数: $total_count"
+            echo "- ✅ 功能/修复提交: $included_count"
+            echo "- 🔧 CI/维护提交: $filtered_count (已过滤)"
+
+          } > changelog.md
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 生成的更新日志预览："
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          cat changelog.md
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          # 输出到 GitHub Actions（使用 base64 编码避免特殊字符问题）
+          changelog_base64=$(base64 -w 0 changelog.md)
+          echo "changelog=$changelog_base64" >> $GITHUB_OUTPUT
+
+  # ------------ 构建 job（依赖 prepare） ------------
+  build:
+    name: 构建 Windows-${{ matrix.arch }}
+    needs: prepare
+    outputs:
+      mihomo_version: ${{ steps.prebuild.outputs.mihomo_version }}
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runs-on: windows-latest
+          - arch: arm64
+            runs-on: windows-11-arm
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v6
+
+      - name: 输出构建信息
+        shell: pwsh
+        run: |
+          Write-Host "============================================"
+          Write-Host "📦 包名:        ${{ needs.prepare.outputs.pkg }}"
+          Write-Host "⏫ 版本号:      ${{ needs.prepare.outputs.version }}"
+          Write-Host "🏷️ Tag:         ${{ needs.prepare.outputs.tag }}"
+          Write-Host "🖥️ 架构:        ${{ matrix.arch }}"
+          Write-Host "============================================"
+
+      - name: 配置 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: master
+
+      - name: 配置 Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 安装项目依赖
+        shell: pwsh
+        run: |
+          Write-Host "📦 正在安装项目依赖..."
+          
+          Write-Host "  ➤ 安装 Flutter 主项目依赖"
+          flutter pub get
+          
+          Write-Host "  ➤ 安装预编译脚本依赖"
+          cd scripts
+          flutter pub get
+          cd ..
+          
+          Write-Host "  ➤ 安装 rinf_cli"
+          cargo install rinf_cli
+          
+          Write-Host "✅ 所有依赖安装完成"
+
+      - name: 安装 Inno Setup
+        shell: pwsh
+        run: |
+          Write-Host "🔧 正在安装 Inno Setup..."
+          dart run scripts/prebuild.dart --installer
+
+      - name: 运行预构建脚本
+        id: prebuild
+        shell: pwsh
+        run: |
+          Write-Host "🔧 正在运行预构建脚本..."
+          
+          # 捕获预构建脚本的输出
+          $output = dart run scripts/prebuild.dart 2>&1 | Tee-Object -Variable prebuildOutput
+          
+          # 从输出中提取 Mihomo 版本号
+          $versionLine = $prebuildOutput | Select-String -Pattern "找到核心:.*版本号:\s*v([\d\.]+)" | Select-Object -First 1
+          
+          if ($versionLine -and $versionLine.Matches.Groups.Count -gt 1) {
+            $mihomoVersion = $versionLine.Matches.Groups[1].Value
+            Write-Host "✅ 检测到 Mihomo 核心版本: $mihomoVersion"
+            echo "mihomo_version=$mihomoVersion" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Host "⚠️ 未能从输出中提取 Mihomo 版本号"
+            echo "mihomo_version=unknown" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: 生成 Rust 桥接代码
+        run: rinf gen
+
+      - name: 生成多语言文件
+        run: dart run slang
+
+      - name: 运行构建脚本
+        shell: pwsh
+        run: |
+          Write-Host "🏗️ 正在运行构建脚本..."
+          dart run scripts/build.dart --all-installers
+
+      - name: 复制构建产物到 dist
+        shell: pwsh
+        run: |
+          Write-Host "📦 正在复制构建产物..."
+          
+          # 确保 dist 目录存在
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          
+          # 检查 build/packages 目录
+          if (Test-Path "build/packages") {
+            # 复制所有文件到 dist
+            Copy-Item -Path "build/packages/*" -Destination "dist/" -Recurse -Force
+            
+            Write-Host "✅ 构建产物已复制到 dist/"
+            Write-Host ""
+            Write-Host "📦 产物列表:"
+            Get-ChildItem -Path "dist/" | ForEach-Object {
+              $size = if ($_.PSIsContainer) { "目录" } else { "$([math]::Round($_.Length / 1MB, 2)) MB" }
+              Write-Host "  - $($_.Name) ($size)"
+            }
+          } else {
+            Write-Host "❌ 错误: build/packages 目录不存在"
+            exit 1
+          }
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.prepare.outputs.pkg }}-windows-${{ matrix.arch }}
+          path: dist/*
+          retention-days: 90
+
+  # ------------ 创建正式发布 ------------
+  release:
+    name: 创建正式发布
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true')
+    outputs:
+      mihomo_version: ${{ steps.get_mihomo_version.outputs.version }}
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v6
+
+      - name: 解码更新日志
+        id: decode_changelog
+        run: |
+          echo "📝 正在解码更新日志..."
+          
+          # 从 prepare job 获取 base64 编码的更新日志
+          changelog_base64="${{ needs.prepare.outputs.changelog }}"
+          
+          if [ -n "$changelog_base64" ]; then
+            # 解码 base64
+            echo "$changelog_base64" | base64 -d > changelog.md
+            
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📋 解码的更新日志预览："
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            cat changelog.md
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            
+            # 输出到 GitHub Actions
+            {
+              echo 'changelog<<EOF'
+              cat changelog.md
+              echo EOF
+            } >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ 未找到更新日志，使用默认内容"
+            echo "changelog=## 📋 更新日志\n\n暂无更新日志信息。" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 获取 Mihomo 版本号
+        id: get_mihomo_version
+        run: |
+          # 从 build job 的输出中获取 mihomo_version
+          mihomo_ver="${{ needs.build.outputs.mihomo_version }}"
+          if [ -z "$mihomo_ver" ] || [ "$mihomo_ver" = "unknown" ]; then
+            echo "⚠️ 未能获取 Mihomo 版本号，使用默认值"
+            mihomo_ver="未知"
+          else
+            echo "✅ Mihomo 核心版本: $mihomo_ver"
+          fi
+          echo "version=$mihomo_ver" >> $GITHUB_OUTPUT
+      
+      - name: 下载构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.pkg }} ${{ needs.prepare.outputs.version }} 稳定版更新！
+          body: |
+            ### 📦 构建信息
+            
+            | 项目 | 内容 |
+            |------|------|
+            | **包名** | `${{ needs.prepare.outputs.pkg }}` |
+            | **版本号** | `${{ needs.prepare.outputs.version }}` |
+            | **Mihomo 核心** | `${{ steps.get_mihomo_version.outputs.version }}` |
+            | **提交哈希** | [`${{ github.sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}) |
+            
+            ${{ steps.decode_changelog.outputs.changelog }}
+            
+            ---
+            
+            ### 📥 下载说明
+            
+            - **x64**: 适用于 Intel/AMD 64位处理器（推荐）
+            - **arm64**: 适用于 ARM64 处理器
+            
+            ### 📝 安装说明
+            
+            1. 下载对应架构的文件
+            2. 按照文件类型进行安装或解压
+            3. 运行应用程序
+            
+            ### ⚠️ 重要提示
+            
+            - 如遇到问题，请查看项目文档或提交 Issue
+            - 反馈问题时请附上相关日志文件
+
+          files: artifacts/**/*
+          draft: false
+          prerelease: false
+          overwrite_files: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
