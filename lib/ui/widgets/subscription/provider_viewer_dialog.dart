@@ -403,7 +403,14 @@ class _ProviderViewerDialogState extends State<ProviderViewerDialog> {
       maxWidth: 720,
       maxHeightRatio: 0.8,
       content: _buildContent(),
-      actionsLeft: _buildSyncAllButton(),
+      actionsLeftButtons: [
+        DialogActionButton(
+          label: context.translate.provider.syncAll,
+          icon: Icons.sync,
+          onPressed: _isSyncingAll ? null : _syncAll,
+          isLoading: _isSyncingAll,
+        ),
+      ],
       actionsRight: [
         DialogActionButton(
           label: context.translate.common.close,
@@ -681,33 +688,6 @@ class _ProviderViewerDialogState extends State<ProviderViewerDialog> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget? _buildSyncAllButton() {
-    if (_isSyncingAll) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-          const SizedBox(width: 8),
-          Text(context.translate.provider.syncing),
-        ],
-      );
-    }
-
-    return OutlinedButton.icon(
-      onPressed: _syncAll,
-      icon: const Icon(Icons.sync, size: 18),
-      label: Text(context.translate.provider.syncAll),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

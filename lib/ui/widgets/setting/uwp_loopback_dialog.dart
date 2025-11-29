@@ -202,61 +202,18 @@ class _UwpLoopbackDialogState extends State<UwpLoopbackDialog> {
           (screenSize.height - 100) / screenSize.height, // 上下各50px间距
       headerWidget: _buildSearchField(),
       content: _buildContent(),
-      actionsLeft: Consumer<UwpLoopbackState>(
-        builder: (context, state, _) {
-          final isDark = Theme.of(context).brightness == Brightness.dark;
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              OutlinedButton.icon(
-                onPressed: state.selectAll,
-                icon: const Icon(Icons.check_box, size: 18),
-                label: Text(context.translate.uwpLoopback.enableAll),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  side: BorderSide(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : Colors.white.withValues(alpha: 0.6),
-                  ),
-                  backgroundColor: isDark
-                      ? Colors.white.withValues(alpha: 0.04)
-                      : Colors.white.withValues(alpha: 0.6),
-                ),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: state.invertSelection,
-                icon: const Icon(Icons.swap_horiz, size: 18),
-                label: Text(context.translate.uwpLoopback.invertSelection),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  side: BorderSide(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.2)
-                        : Colors.white.withValues(alpha: 0.6),
-                  ),
-                  backgroundColor: isDark
-                      ? Colors.white.withValues(alpha: 0.04)
-                      : Colors.white.withValues(alpha: 0.6),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+      actionsLeftButtons: [
+        DialogActionButton(
+          label: context.translate.uwpLoopback.enableAll,
+          icon: Icons.check_box,
+          onPressed: () => context.read<UwpLoopbackState>().selectAll(),
+        ),
+        DialogActionButton(
+          label: context.translate.uwpLoopback.invertSelection,
+          icon: Icons.swap_horiz,
+          onPressed: () => context.read<UwpLoopbackState>().invertSelection(),
+        ),
+      ],
       actionsRight: [
         DialogActionButton(
           label: context.translate.common.cancel,

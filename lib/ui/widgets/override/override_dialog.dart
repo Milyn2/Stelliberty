@@ -861,9 +861,13 @@ class _OverrideDialogState extends State<OverrideDialog> {
         if (!mounted) return;
 
         if (success) {
-          // 成功后关闭对话框
+          // 成功后显示 Toast 并关闭对话框
           Logger.info('添加成功，关闭对话框');
           if (mounted) {
+            ModernToast.success(
+              context,
+              context.translate.overrideDialog.addSuccess,
+            );
             Navigator.of(context).pop(override);
           }
         } else {

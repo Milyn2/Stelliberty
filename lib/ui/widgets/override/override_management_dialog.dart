@@ -354,14 +354,52 @@ class _OverrideManagementDialogState extends State<OverrideManagementDialog> {
     }
   }
 
-  void _deleteOverride(int index) {
-    setState(() {
-      _overrides.removeAt(index);
-    });
+  void _deleteOverride(int index) async {
+    final overrideName = _overrides[index].name;
+
+    // 显示确认对话框
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.translate.overrideDialog.deleteConfirm),
+        content: Text(
+          context.translate.overrideDialog.deleteConfirmMessage.replaceAll(
+            '{name}',
+            overrideName,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.translate.common.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(context.translate.common.delete),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() {
+        _overrides.removeAt(index);
+      });
+
+      // 显示删除成功 Toast
+      if (mounted) {
+        ModernToast.success(
+          context,
+          context.translate.overrideDialog.deleteSuccess,
+        );
+      }
+    }
   }
 
   void _handleSave() {
     widget.onSave(_overrides);
+    ModernToast.success(context, context.translate.overrideDialog.saveSuccess);
     Navigator.of(context).pop();
   }
 }

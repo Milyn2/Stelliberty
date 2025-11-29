@@ -1029,6 +1029,10 @@ class _SubscriptionDialogState extends State<SubscriptionDialog> {
         // 没有回调，直接返回结果（编辑模式）
         await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
+          ModernToast.success(
+            context,
+            context.translate.subscriptionDialog.saveSuccess,
+          );
           Navigator.of(context).pop(result);
         }
       }

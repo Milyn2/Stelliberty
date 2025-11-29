@@ -50,10 +50,13 @@ class ModernDialog extends StatefulWidget {
   // 内容区域（插槽）
   final Widget content;
 
-  // 底部左侧区域（提示文字或按钮）
+  // 底部左侧区域（提示文字或操作按钮列表）
   final Widget? actionsLeft;
 
-  // 底部右侧按钮列表
+  // 底部左侧操作按钮列表（带图标，优先于 actionsLeft 使用）
+  final List<DialogActionButton>? actionsLeftButtons;
+
+  // 底部右侧按钮列表（不带图标，仅文字+加载指示器）
   final List<DialogActionButton> actionsRight;
 
   // 最大宽度
@@ -78,12 +81,17 @@ class ModernDialog extends StatefulWidget {
     this.titleIconColor,
     required this.content,
     this.actionsLeft,
+    this.actionsLeftButtons,
     required this.actionsRight,
     this.maxWidth = 720,
     this.maxHeightRatio = 0.85,
     this.borderRadius = DialogConstants.dialogBorderRadius,
     this.onClose,
-  }) : assert(title != null || titleWidget != null, '必须提供 title 或 titleWidget');
+  }) : assert(title != null || titleWidget != null, '必须提供 title 或 titleWidget'),
+       assert(
+         actionsLeft == null || actionsLeftButtons == null,
+         'actionsLeft 和 actionsLeftButtons 不能同时使用',
+       );
 
   @override
   State<ModernDialog> createState() => _ModernDialogState();
@@ -356,22 +364,74 @@ class _ModernDialogState extends State<ModernDialog>
         ),
         child: Row(
           children: [
-            // 左侧区域
-            if (widget.actionsLeft != null)
-              Expanded(child: widget.actionsLeft!)
-            else
-              const Spacer(),
-            // 右侧按钮
-            ...widget.actionsRight.map((action) {
+            // 左侧按钮：从左边开始排列
+            if (widget.actionsLeftButtons != null)
+              ...widget.actionsLeftButtons!.asMap().entries.map((entry) {
+                final index = entry.key;
+                final action = entry.value;
+                return Padding(
+                  padding: EdgeInsets.only(right: index < widget.actionsLeftButtons!.length - 1 ? 8 : 0),
+                  child: _buildActionButtonWithIcon(action, isDark),
+                );
+              })
+            else if (widget.actionsLeft != null)
+              widget.actionsLeft!,
+            // 中间空白区域
+            const Spacer(),
+            // 右侧按钮：从右边开始排列
+            ...widget.actionsRight.asMap().entries.map((entry) {
+              final index = entry.key;
+              final action = entry.value;
               return Padding(
-                padding: EdgeInsets.only(
-                  left: action == widget.actionsRight.first ? 0 : 12,
-                ),
+                padding: EdgeInsets.only(left: index > 0 ? 12 : 0),
                 child: _buildActionButton(action, isDark),
               );
             }),
           ],
         ),
+      ),
+    );
+  }
+
+  // 构建左侧操作按钮（带图标）
+  Widget _buildActionButtonWithIcon(DialogActionButton action, bool isDark) {
+    return OutlinedButton.icon(
+      onPressed: action.isLoading ? null : action.onPressed,
+      icon: action.icon != null
+          ? Icon(action.icon, size: 18)
+          : const SizedBox.shrink(),
+      label: action.isLoading
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: DialogConstants.loadingIndicatorSize,
+                  height: DialogConstants.loadingIndicatorSize,
+                  child: CircularProgressIndicator(
+                    strokeWidth: DialogConstants.loadingIndicatorStrokeWidth,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white70),
+                  ),
+                ),
+                const SizedBox(width: DialogConstants.loadingIndicatorSpacing),
+                Text(action.label),
+              ],
+            )
+          : Text(action.label),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(
+            DialogConstants.buttonBorderRadius,
+          ),
+        ),
+        side: BorderSide(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.6),
+        ),
+        backgroundColor: isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : Colors.white.withValues(alpha: 0.6),
       ),
     );
   }
@@ -400,12 +460,14 @@ class _ModernDialogState extends State<ModernDialog>
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: DialogConstants.loadingIndicatorSize,
                     height: DialogConstants.loadingIndicatorSize,
                     child: CircularProgressIndicator(
                       strokeWidth: DialogConstants.loadingIndicatorStrokeWidth,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(
@@ -472,10 +534,14 @@ class DialogActionButton {
   // 是否显示加载状态
   final bool isLoading;
 
+  // 图标（仅用于左侧操作按钮）
+  final IconData? icon;
+
   const DialogActionButton({
     required this.label,
     this.onPressed,
     this.isPrimary = false,
     this.isLoading = false,
+    this.icon,
   });
 }

@@ -183,7 +183,8 @@
     "invalidYaml": "Invalid YAML file",
     "yamlFormatError": "Incorrect YAML file format",
     "noProxyConfig": "File does not contain proxy configuration",
-    "yamlParseError": "YAML parsing failed: {error}"
+    "yamlParseError": "YAML parsing failed: {error}",
+    "saveSuccess": "Subscription saved successfully"
   },
   "overrideDialog": {
     "title": "Override Rules",
@@ -213,7 +214,12 @@
     "selectOverridesHint": "Select override rules to apply to this subscription",
     "noOverridesTitle": "No overrides available",
     "noOverridesHint": "Please add overrides in the global Override Management page first",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "addSuccess": "Override added successfully",
+    "saveSuccess": "Override saved successfully",
+    "deleteConfirm": "Confirm Delete",
+    "deleteConfirmMessage": "Are you sure you want to delete override \"{name}\"?",
+    "deleteSuccess": "Override deleted successfully"
   },
   "fileEditor": {
     "title": "File Editor",

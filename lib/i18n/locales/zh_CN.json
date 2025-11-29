@@ -183,7 +183,8 @@
     "invalidYaml": "无效的 YAML 文件",
     "yamlFormatError": "YAML 文件格式不正确",
     "noProxyConfig": "文件不包含代理配置信息",
-    "yamlParseError": "YAML 解析失败: {error}"
+    "yamlParseError": "YAML 解析失败: {error}",
+    "saveSuccess": "订阅保存成功"
   },
   "overrideDialog": {
     "title": "规则覆写",
@@ -213,7 +214,12 @@
     "selectOverridesHint": "选择要应用到此订阅的覆写规则",
     "noOverridesTitle": "暂无可用覆写",
     "noOverridesHint": "请先在全局覆写管理页面中添加覆写",
-    "disabled": "已禁用"
+    "disabled": "已禁用",
+    "addSuccess": "覆写添加成功",
+    "saveSuccess": "覆写保存成功",
+    "deleteConfirm": "确认删除",
+    "deleteConfirmMessage": "确定要删除覆写 \"{name}\" 吗？",
+    "deleteSuccess": "覆写已删除"
   },
   "fileEditor": {
     "title": "文件编辑器",
