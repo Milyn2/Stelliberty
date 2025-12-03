@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 import 'package:stelliberty/clash/data/dns_config_model.dart';
+import 'package:stelliberty/services/path_service.dart';
 import 'package:stelliberty/utils/logger.dart';
 
 // DNS 配置服务
@@ -13,14 +13,13 @@ class DnsService {
 
   DnsService._internal();
 
-  String? _dnsConfigPath;
+  // DNS 配置文件路径（从 PathService 获取）
+  String get _dnsConfigPath => PathService.instance.dnsConfigPath;
 
   // 初始化服务
   Future<void> initialize(String baseDir) async {
-    _dnsConfigPath = path.join(baseDir, 'dns_config.yaml');
-
     // 如果配置文件不存在，创建默认配置文件
-    if (!File(_dnsConfigPath!).existsSync()) {
+    if (!File(_dnsConfigPath).existsSync()) {
       Logger.info('DNS 配置文件不存在，创建默认配置：$_dnsConfigPath');
       final defaultConfig = DnsConfig.defaultConfig();
       await saveDnsConfig(defaultConfig);
@@ -31,27 +30,21 @@ class DnsService {
 
   // 检查 DNS 配置文件是否存在
   bool configExists() {
-    if (_dnsConfigPath == null) return false;
-    return File(_dnsConfigPath!).existsSync();
+    return File(_dnsConfigPath).existsSync();
   }
 
   // 获取 DNS 配置文件路径
-  String? getConfigPath() {
+  String getConfigPath() {
     return _dnsConfigPath;
   }
 
   // 保存 DNS 配置
   Future<bool> saveDnsConfig(DnsConfig config) async {
-    if (_dnsConfigPath == null) {
-      Logger.error('DNS 配置路径未初始化');
-      return false;
-    }
-
     try {
       final configMap = config.toMap();
       final yamlContent = _mapToYaml(configMap);
 
-      await File(_dnsConfigPath!).writeAsString(yamlContent);
+      await File(_dnsConfigPath).writeAsString(yamlContent);
       Logger.info('DNS 配置已保存：$_dnsConfigPath');
       return true;
     } catch (e) {
@@ -62,18 +55,13 @@ class DnsService {
 
   // 读取 DNS 配置
   Future<DnsConfig?> loadDnsConfig() async {
-    if (_dnsConfigPath == null) {
-      Logger.error('DNS 配置路径未初始化');
-      return null;
-    }
-
     if (!configExists()) {
       Logger.warning('DNS 配置文件不存在，返回默认配置');
       return DnsConfig.defaultConfig();
     }
 
     try {
-      final yamlContent = await File(_dnsConfigPath!).readAsString();
+      final yamlContent = await File(_dnsConfigPath).readAsString();
       final yamlDoc = loadYaml(yamlContent);
       final configMap = _yamlToMap(yamlDoc);
 
@@ -88,14 +76,9 @@ class DnsService {
 
   // 删除 DNS 配置文件
   Future<bool> deleteDnsConfig() async {
-    if (_dnsConfigPath == null) {
-      Logger.error('DNS 配置路径未初始化');
-      return false;
-    }
-
     try {
       if (configExists()) {
-        await File(_dnsConfigPath!).delete();
+        await File(_dnsConfigPath).delete();
         Logger.info('DNS 配置文件已删除');
       }
       return true;

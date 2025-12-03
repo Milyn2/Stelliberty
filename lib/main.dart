@@ -170,8 +170,11 @@ class ProviderBundle {
 // 初始化基础服务（路径、配置存储）
 // 必须最先执行，其他服务依赖这些基础服务
 Future<void> initializeBaseServices() async {
+  // 先初始化路径服务（其他服务依赖它）
+  await PathService.instance.initialize();
+
+  // 再并行初始化配置服务（它们依赖路径服务）
   await Future.wait([
-    PathService.instance.initialize(),
     AppPreferences.instance.init(),
     ClashPreferences.instance.init(),
   ]);
@@ -253,7 +256,7 @@ Future<ProviderBundle> createProviders(String appDataPath) async {
   final themeProvider = ThemeProvider();
   final windowEffectProvider = WindowEffectProvider();
   final subscriptionProvider = SubscriptionProvider(overrideService);
-  final overrideProvider = OverrideProvider(appDataPath, overrideService);
+  final overrideProvider = OverrideProvider(overrideService);
   final clashProvider = ClashProvider();
   final logProvider = LogProvider();
   final serviceProvider = ServiceProvider();
@@ -395,8 +398,6 @@ Future<ProviderBundle> createFallbackProviders() async {
     Logger.error('路径服务初始化失败：$e');
   }
 
-  final appDataPath = PathService.instance.appDataPath;
-
   // 创建共享的 OverrideService 实例
   final overrideService = OverrideService();
   try {
@@ -411,7 +412,7 @@ Future<ProviderBundle> createFallbackProviders() async {
     themeProvider: ThemeProvider(),
     windowEffectProvider: WindowEffectProvider(),
     subscriptionProvider: SubscriptionProvider(overrideService),
-    overrideProvider: OverrideProvider(appDataPath, overrideService),
+    overrideProvider: OverrideProvider(overrideService),
     clashProvider: ClashProvider(),
     logProvider: LogProvider(),
     serviceProvider: ServiceProvider(),

@@ -1,16 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:path/path.dart' as path;
 import 'package:stelliberty/clash/core/override_state.dart';
 import 'package:stelliberty/clash/data/override_model.dart';
 import 'package:stelliberty/clash/services/override_service.dart';
+import 'package:stelliberty/services/path_service.dart';
 import 'package:stelliberty/utils/logger.dart';
 
 // 全局覆写管理 Provider
 class OverrideProvider extends ChangeNotifier {
   final OverrideService _service;
-  final String _baseDir;
 
   // 状态管理器
   final OverrideStateManager _stateManager = OverrideStateManager.instance;
@@ -38,7 +37,7 @@ class OverrideProvider extends ChangeNotifier {
     return _stateManager.isOverrideUpdating(overrideId);
   }
 
-  OverrideProvider(this._baseDir, this._service);
+  OverrideProvider(this._service);
 
   // 初始化 Provider
   Future<void> initialize() async {
@@ -298,7 +297,7 @@ class OverrideProvider extends ChangeNotifier {
   // 加载覆写列表
   Future<List<OverrideConfig>> _loadOverrideList() async {
     try {
-      final listPath = path.join(_baseDir, 'overrides', 'list.json');
+      final listPath = PathService.instance.overrideListPath;
       final listFile = File(listPath);
 
       if (!await listFile.exists()) {
@@ -353,7 +352,7 @@ class OverrideProvider extends ChangeNotifier {
   // 保存覆写列表
   Future<void> _saveOverrideList() async {
     try {
-      final listPath = path.join(_baseDir, 'overrides', 'list.json');
+      final listPath = PathService.instance.overrideListPath;
       final listFile = File(listPath);
 
       // 确保目录存在

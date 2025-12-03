@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stelliberty/storage/developer_preferences.dart';
 import '../config/clash_defaults.dart';
 import '../utils/system_proxy.dart';
 
@@ -9,11 +11,21 @@ class ClashPreferences {
   static ClashPreferences? _instance;
   static ClashPreferences get instance => _instance ??= ClashPreferences._();
 
-  SharedPreferences? _prefs;
+  dynamic _prefs; // SharedPreferences 或 DeveloperPreferences
+
+  // 检查是否为 Dev 模式
+  static bool get isDevMode => kDebugMode || kProfileMode;
 
   // 初始化
   Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
+    if (isDevMode) {
+      // Dev 模式：使用开发者偏好 JSON 配置
+      await DeveloperPreferences.instance.init();
+      _prefs = DeveloperPreferences.instance;
+    } else {
+      // Release 模式：使用系统 SharedPreferences
+      _prefs = await SharedPreferences.getInstance();
+    }
   }
 
   // 确保已初始化
@@ -237,7 +249,11 @@ class ClashPreferences {
   // ==================== 端口配置 ====================
 
   // 获取混合端口
-  int getMixedPort() => _getInt(_kMixedPort, ClashDefaults.mixedPort);
+  // Dev 模式默认 2000，Release 默认 7777
+  int getMixedPort() {
+    final defaultPort = isDevMode ? 2000 : ClashDefaults.mixedPort;
+    return _getInt(_kMixedPort, defaultPort);
+  }
 
   // 保存混合端口
   Future<void> setMixedPort(int port) => _setInt(_kMixedPort, port);

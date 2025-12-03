@@ -18,30 +18,41 @@ class PathService {
   // 应用名称（从 package_info_plus 获取）
   late final String _appName;
 
-  // 缓存的目录路径，初始化时计算一次避免重复拼接
-  late final String _subscriptionsDir;
-  late final String _overridesDir;
-  late final String _subscriptionListPath;
+  // 缓存的路径，初始化时计算一次避免重复拼接
+  late final String _subscriptionsDirCache;
+  late final String _overridesDirCache;
+  late final String _subscriptionListPathCache;
+  late final String _overrideListPathCache;
+  late final String _dnsConfigPathCache;
+  late final String _pacFilePathCache;
 
   // 子目录名称常量
   static const String _subscriptionsDirName = 'subscriptions';
   static const String _overridesDirName = 'overrides';
 
   // 配置文件名称常量
-  static const String _subscriptionListName = 'list.json';
+  static const String _subscriptionListFileName = 'subscriptions_list.json';
+  static const String _overrideListFileName = 'overrides_list.json';
+  static const String _dnsConfigName = 'dns_config.yaml';
   static const String _pacFileName = 'stelliberty_proxy.pac';
 
   // 订阅目录路径（缓存），存储所有订阅配置文件
-  String get subscriptionsDir => _subscriptionsDir;
+  String get subscriptionsDir => _subscriptionsDirCache;
 
   // 覆写目录路径（缓存），存储 YAML 和 JavaScript 覆写文件
-  String get overridesDir => _overridesDir;
+  String get overridesDir => _overridesDirCache;
 
   // 订阅列表文件路径（缓存），存储订阅元数据
-  String get subscriptionListPath => _subscriptionListPath;
+  String get subscriptionListPath => _subscriptionListPathCache;
 
-  // PAC 文件路径，用于系统代理 PAC 模式
-  String get pacFilePath => path.join(appDataPath, _pacFileName);
+  // 覆写列表文件路径（缓存），存储覆写元数据
+  String get overrideListPath => _overrideListPathCache;
+
+  // DNS 配置文件路径（缓存）
+  String get dnsConfigPath => _dnsConfigPathCache;
+
+  // PAC 文件路径（缓存），用于系统代理 PAC 模式
+  String get pacFilePath => _pacFilePathCache;
 
   // 获取指定订阅的配置文件路径
   String getSubscriptionConfigPath(String subscriptionId) {
@@ -63,9 +74,12 @@ class PathService {
     appDataPath = await _determineAppDataPath();
 
     // 初始化缓存路径，一次性计算避免重复拼接
-    _subscriptionsDir = path.join(appDataPath, _subscriptionsDirName);
-    _overridesDir = path.join(appDataPath, _overridesDirName);
-    _subscriptionListPath = path.join(_subscriptionsDir, _subscriptionListName);
+    _subscriptionsDirCache = path.join(appDataPath, _subscriptionsDirName);
+    _overridesDirCache = path.join(appDataPath, _overridesDirName);
+    _subscriptionListPathCache = path.join(_subscriptionsDirCache, _subscriptionListFileName);
+    _overrideListPathCache = path.join(_overridesDirCache, _overrideListFileName);
+    _dnsConfigPathCache = path.join(appDataPath, _dnsConfigName);
+    _pacFilePathCache = path.join(appDataPath, _pacFileName);
 
     // 创建所有必要的目录
     await _createDirectories();
@@ -73,7 +87,7 @@ class PathService {
 
   // 创建所有必要的目录结构
   Future<void> _createDirectories() async {
-    final directories = [appDataPath, _subscriptionsDir, _overridesDir];
+    final directories = [appDataPath, _subscriptionsDirCache, _overridesDirCache];
 
     for (final dirPath in directories) {
       final dir = Directory(dirPath);

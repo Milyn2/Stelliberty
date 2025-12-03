@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stelliberty/storage/developer_preferences.dart';
 
 // 通用应用持久化配置管理,管理主题、窗口、语言等应用级配置
 class AppPreferences {
@@ -8,11 +10,21 @@ class AppPreferences {
   static AppPreferences? _instance;
   static AppPreferences get instance => _instance ??= AppPreferences._();
 
-  SharedPreferences? _prefs;
+  dynamic _prefs; // SharedPreferences 或 DeveloperPreferences
+
+  // 检查是否为 Dev 模式
+  static bool get isDevMode => kDebugMode || kProfileMode;
 
   // 初始化
   Future<void> init() async {
-    _prefs = await SharedPreferences.getInstance();
+    if (isDevMode) {
+      // Dev 模式：使用开发者偏好 JSON 配置
+      await DeveloperPreferences.instance.init();
+      _prefs = DeveloperPreferences.instance;
+    } else {
+      // Release 模式：使用系统 SharedPreferences
+      _prefs = await SharedPreferences.getInstance();
+    }
   }
 
   // 确保 SharedPreferences 已初始化
