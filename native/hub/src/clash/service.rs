@@ -56,15 +56,15 @@ impl ServiceManager {
                 return ServiceStatus::NotInstalled;
             }
 
-            // 服务已安装，快速检测是否运行（不带重试的 Ping）
+            // 服务已安装，快速检测是否运行（不带重试的 Heartbeat）
             let is_running = tokio::time::timeout(
                 std::time::Duration::from_millis(300),
-                self.ipc_client.send_command(IpcCommand::Ping),
+                self.ipc_client.send_command(IpcCommand::Heartbeat),
             )
             .await
             .ok()
             .and_then(|r| r.ok())
-            .map(|resp| matches!(resp, IpcResponse::Pong))
+            .map(|resp| matches!(resp, IpcResponse::HeartbeatAck))
             .unwrap_or(false);
 
             if !is_running {
@@ -177,35 +177,12 @@ impl ServiceManager {
     pub async fn uninstall_service(&self) -> Result<()> {
         log::info!("卸载 Stelliberty Service…");
 
-        // 记录卸载前核心是否在运行
-        let clash_was_running = if Self::is_service_installed() {
-            matches!(self.get_status().await, ServiceStatus::Running { .. })
-        } else {
-            false
-        };
-
-        if clash_was_running {
-            log::info!("检测到 Clash 核心正在运行，将在权限确认后停止");
-        }
-
         // 执行卸载命令（会弹 UAC，用户可能取消）
+        // uninstall 命令会自动停止服务进程（包括 Clash 核心）
         #[cfg(windows)]
         {
-            // 如果用户取消，这里会返回错误，核心不会被停止
             self.run_elevated_command("uninstall").await?;
-
-            // 走到这里说明用户确认了权限，卸载成功
-            // 现在可以安全地停止核心了
-            if clash_was_running {
-                log::info!("权限确认成功，停止 Clash 核心...");
-                if let Err(e) = self.stop_clash().await {
-                    log::warn!("通过 IPC 停止 Clash 失败：{}，但服务已卸载", e);
-                } else {
-                    log::info!("Clash 核心已通过 IPC 停止");
-                    // 等待服务完全停止
-                    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-                }
-            }
+            log::info!("服务已卸载（服务进程已自动停止）");
         }
 
         #[cfg(not(windows))]
@@ -730,6 +707,10 @@ pub struct StartClash {
 #[derive(Deserialize, DartSignal)]
 pub struct StopClash;
 
+// Dart -> Rust: 向服务发送心跳
+#[derive(Deserialize, DartSignal)]
+pub struct SendServiceHeartbeat;
+
 // Rust → Dart：服务状态响应
 #[derive(Serialize, RustSignal)]
 pub struct ServiceStatusResponse {
@@ -953,6 +934,27 @@ impl StopClash {
                     pid: None,
                 }
                 .send_signal_to_dart();
+            }
+        }
+    }
+}
+
+impl SendServiceHeartbeat {
+    pub async fn handle(&self) {
+        let client = IpcClient::new()
+            .with_timeout(std::time::Duration::from_secs(2))
+            .with_max_retries(0);
+
+        match client.send_command(IpcCommand::Heartbeat).await {
+            Ok(IpcResponse::HeartbeatAck) => {
+                log::trace!("服务心跳发送成功");
+                // 成功时不需要向 Dart 发送信号
+            }
+            Ok(resp) => {
+                log::warn!("发送心跳时收到意外响应: {:?}", resp);
+            }
+            Err(e) => {
+                log::warn!("发送服务心跳失败: {}", e);
             }
         }
     }

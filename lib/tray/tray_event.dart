@@ -321,9 +321,9 @@ class TrayEventHandler with TrayListener {
       // 1. 先停止 Clash 进程(若正在运行)
       if (_clashProvider != null && _clashProvider!.isRunning) {
         Logger.info('正在停止 Clash 进程...');
-        // 先禁用系统代理,再停止核心
+        // 先禁用系统代理,再停止核心（使用 ClashManager 统一管理，自动检测服务模式）
         await ClashManager.instance.disableSystemProxy();
-        await _clashProvider!.stop();
+        await ClashManager.instance.stopCore();
         Logger.info('Clash 进程已停止');
       }
 
