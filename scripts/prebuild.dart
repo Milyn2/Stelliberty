@@ -182,7 +182,7 @@ Future<void> main(List<String> args) async {
     ..addFlag(
       'installer',
       negatable: false,
-      help: '安装平台安装器工具（Windows: Inno Setup）',
+      help: '安装平台安装器工具（Windows: Inno Setup, Linux: dpkg/rpm/appimagetool）',
     )
     ..addFlag('help', abbr: 'h', negatable: false, help: '显示帮助信息');
 
@@ -228,12 +228,14 @@ Future<void> main(List<String> args) async {
   // 处理 --installer 参数（先检查平台支持）
   final setupInstaller = argResults['installer'] as bool;
   if (setupInstaller) {
-    if (!Platform.isWindows) {
-      log('❌ 错误: --installer 仅支持 Windows 平台');
+    if (Platform.isWindows) {
+      await setupInnoSetup(projectRoot: projectRoot);
+    } else if (Platform.isLinux) {
+      await setupLinuxPackagingTools(projectRoot: projectRoot);
+    } else {
+      log('❌ 错误: --installer 仅支持 Windows 和 Linux 平台');
       exit(1);
     }
-
-    await setupInnoSetup(projectRoot: projectRoot);
   }
 
   final isAndroid = argResults['android'] as bool;
@@ -309,8 +311,8 @@ Future<void> cleanAssetsDirectory({required String projectRoot}) async {
   await for (final entity in assetsDir.list()) {
     final name = p.basename(entity.path);
 
-    // 跳过 test 文件夹
-    if (name == 'test') {
+    // 跳过 test 和 tools 文件夹
+    if (name == 'test' || name == 'tools') {
       log('  ⏭️  保留: $name');
       continue;
     }
@@ -908,5 +910,345 @@ Future<void> runProcess(
     throw Exception(
       '命令 "$executable ${arguments.join(' ')}" 执行失败，退出码: $exitCode',
     );
+  }
+}
+
+// 运行命令并捕获输出
+Future<ProcessResult> runProcessWithOutput(
+  String executable,
+  List<String> arguments, {
+  String? workingDirectory,
+  String? stdinData,
+}) async {
+  final process = await Process.start(
+    executable,
+    arguments,
+    workingDirectory: workingDirectory,
+  );
+
+  // 如果需要输入数据（如 sudo 密码）
+  if (stdinData != null) {
+    process.stdin.writeln(stdinData);
+    await process.stdin.close();
+  }
+
+  final stdout = await process.stdout.transform(utf8.decoder).join();
+  final stderr = await process.stderr.transform(utf8.decoder).join();
+  final exitCode = await process.exitCode;
+
+  return ProcessResult(process.pid, exitCode, stdout, stderr);
+}
+
+// 安装 Linux 打包工具
+Future<void> setupLinuxPackagingTools({required String projectRoot}) async {
+  log('🔧 正在检查 Linux 打包工具...');
+
+  // 检测包管理器类型
+  final packageManager = await _detectPackageManager();
+  log('📦 检测到包管理器: $packageManager');
+
+  // 检查并安装 dpkg-deb
+  await _checkAndInstallDpkg(packageManager);
+
+  // 检查并安装 rpmbuild
+  await _checkAndInstallRpm(packageManager);
+
+  // 检查并安装 appimagetool（从 GitHub 下载最新版）
+  await _checkAndInstallAppImageTool(projectRoot: projectRoot);
+
+  log('✅ Linux 打包工具检查完成');
+}
+
+// 检测 Linux 包管理器类型
+Future<String> _detectPackageManager() async {
+  // 检查 apt（Debian/Ubuntu）
+  final aptResult = await Process.run('which', ['apt']);
+  if (aptResult.exitCode == 0) return 'apt';
+
+  // 检查 dnf（Fedora/RHEL 8+）
+  final dnfResult = await Process.run('which', ['dnf']);
+  if (dnfResult.exitCode == 0) return 'dnf';
+
+  // 检查 yum（CentOS/RHEL 7）
+  final yumResult = await Process.run('which', ['yum']);
+  if (yumResult.exitCode == 0) return 'yum';
+
+  // 检查 pacman（Arch Linux）
+  final pacmanResult = await Process.run('which', ['pacman']);
+  if (pacmanResult.exitCode == 0) return 'pacman';
+
+  // 检查 zypper（openSUSE）
+  final zypperResult = await Process.run('which', ['zypper']);
+  if (zypperResult.exitCode == 0) return 'zypper';
+
+  return 'unknown';
+}
+
+// 检查并安装 dpkg-deb
+Future<void> _checkAndInstallDpkg(String packageManager) async {
+  final result = await Process.run('which', ['dpkg-deb']);
+  if (result.exitCode == 0) {
+    // 获取版本
+    final versionResult = await Process.run('dpkg-deb', ['--version']);
+    final versionLine = (versionResult.stdout as String).split('\n').first;
+    log('✅ dpkg-deb 已安装: $versionLine');
+    return;
+  }
+
+  log('⚠️  dpkg-deb 未安装，正在安装...');
+
+  switch (packageManager) {
+    case 'apt':
+      await _runSudoCommand(['apt', 'update']);
+      await _runSudoCommand(['apt', 'install', '-y', 'dpkg']);
+      break;
+    case 'dnf':
+    case 'yum':
+      await _runSudoCommand([packageManager, 'install', '-y', 'dpkg']);
+      break;
+    case 'pacman':
+      await _runSudoCommand(['pacman', '-S', '--noconfirm', 'dpkg']);
+      break;
+    case 'zypper':
+      await _runSudoCommand(['zypper', 'install', '-y', 'dpkg']);
+      break;
+    default:
+      log('⚠️  无法自动安装 dpkg-deb，请手动安装');
+      return;
+  }
+
+  log('✅ dpkg-deb 安装完成');
+}
+
+// 检查并安装 rpmbuild
+Future<void> _checkAndInstallRpm(String packageManager) async {
+  final result = await Process.run('which', ['rpmbuild']);
+  if (result.exitCode == 0) {
+    // 获取版本
+    final versionResult = await Process.run('rpmbuild', ['--version']);
+    final versionLine = (versionResult.stdout as String).trim();
+    log('✅ rpmbuild 已安装: $versionLine');
+    return;
+  }
+
+  log('⚠️  rpmbuild 未安装，正在安装...');
+
+  switch (packageManager) {
+    case 'apt':
+      await _runSudoCommand(['apt', 'update']);
+      await _runSudoCommand(['apt', 'install', '-y', 'rpm']);
+      break;
+    case 'dnf':
+    case 'yum':
+      await _runSudoCommand([packageManager, 'install', '-y', 'rpm-build']);
+      break;
+    case 'pacman':
+      await _runSudoCommand(['pacman', '-S', '--noconfirm', 'rpm-tools']);
+      break;
+    case 'zypper':
+      await _runSudoCommand(['zypper', 'install', '-y', 'rpm-build']);
+      break;
+    default:
+      log('⚠️  无法自动安装 rpmbuild，请手动安装');
+      return;
+  }
+
+  log('✅ rpmbuild 安装完成');
+}
+
+// 检查并安装 appimagetool（从 GitHub 获取最新版本）
+Future<void> _checkAndInstallAppImageTool({required String projectRoot}) async {
+  // 存放到 assets/tools 目录，避免被 flutter clean 清理
+  final toolPath = p.join(projectRoot, 'assets', 'tools', 'appimagetool');
+  final toolFile = File(toolPath);
+
+  // 检查本地工具是否存在
+  if (await toolFile.exists()) {
+    // 验证可执行性
+    final testResult = await Process.run(toolPath, ['--version']);
+    if (testResult.exitCode == 0) {
+      final version = (testResult.stdout as String).trim();
+      log('✅ appimagetool 已安装: $version');
+
+      // 检查是否有更新版本
+      await _updateAppImageToolIfNeeded(toolPath, projectRoot);
+      return;
+    }
+  }
+
+  log('📥 正在从 GitHub 下载最新版 appimagetool...');
+  await _downloadLatestAppImageTool(projectRoot);
+}
+
+// 检查并更新 appimagetool
+Future<void> _updateAppImageToolIfNeeded(
+  String currentToolPath,
+  String projectRoot,
+) async {
+  try {
+    // 获取当前版本
+    final currentResult = await Process.run(currentToolPath, ['--version']);
+    final currentVersion = (currentResult.stdout as String).trim();
+
+    // 从 GitHub 获取最新 release 信息
+    final githubToken =
+        Platform.environment['GITHUB_TOKEN'] ??
+        Platform.environment['GH_TOKEN'];
+
+    final headers = <String, String>{'Accept': 'application/vnd.github+json'};
+    if (githubToken != null && githubToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $githubToken';
+    }
+
+    final response = await http
+        .get(
+          Uri.parse(
+            'https://api.github.com/repos/AppImage/appimagetool/releases/latest',
+          ),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final latestTag = data['tag_name'] as String;
+
+      // 比较版本（简单字符串比较）
+      if (!currentVersion.contains(latestTag) &&
+          latestTag != currentVersion) {
+        log('💡 发现新版本: $latestTag（当前: $currentVersion）');
+        log('🔄 正在更新 appimagetool...');
+        await _downloadLatestAppImageTool(projectRoot);
+      }
+    }
+  } catch (e) {
+    // 更新检查失败不影响使用
+    log('⚠️  检查更新失败: ${simplifyError(e)}');
+  }
+}
+
+// 下载最新版 appimagetool
+Future<void> _downloadLatestAppImageTool(String projectRoot) async {
+  const repoUrl =
+      'https://api.github.com/repos/AppImage/appimagetool/releases/latest';
+
+  final githubToken =
+      Platform.environment['GITHUB_TOKEN'] ?? Platform.environment['GH_TOKEN'];
+
+  final headers = <String, String>{'Accept': 'application/vnd.github+json'};
+  if (githubToken != null && githubToken.isNotEmpty) {
+    headers['Authorization'] = 'Bearer $githubToken';
+  }
+
+  try {
+    final response = await http
+        .get(Uri.parse(repoUrl), headers: headers)
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      throw Exception('获取 Release 信息失败: HTTP ${response.statusCode}');
+    }
+
+    final data = json.decode(response.body);
+    final assets = data['assets'] as List;
+    final tagName = data['tag_name'] as String;
+
+    // 根据架构选择下载文件
+    final arch = getCurrentArch();
+    String assetKeyword;
+    if (arch == 'arm64' || arch == 'aarch64') {
+      assetKeyword = 'aarch64';
+    } else {
+      assetKeyword = 'x86_64';
+    }
+
+    final asset = assets.firstWhere(
+      (a) {
+        final name = a['name'] as String;
+        return name.contains(assetKeyword) && name.endsWith('.AppImage');
+      },
+      orElse: () => null,
+    );
+
+    if (asset == null) {
+      throw Exception('未找到适合 $arch 架构的 appimagetool');
+    }
+
+    final downloadUrl = asset['browser_download_url'] as String;
+    final fileName = asset['name'] as String;
+
+    log('📥 下载 $fileName (版本: $tagName)...');
+
+    // 下载文件（处理重定向）
+    final client = HttpClient();
+    client.autoUncompress = false;
+    // 跟随重定向
+    client.connectionTimeout = const Duration(seconds: 30);
+
+    configureProxy(client, Uri.parse(downloadUrl), isFirstAttempt: false);
+
+    HttpClientRequest request = await client.getUrl(Uri.parse(downloadUrl));
+    HttpClientResponse downloadResponse = await request.close();
+
+    // 手动处理重定向（最多 5 次）
+    int redirectCount = 0;
+    while (downloadResponse.isRedirect && redirectCount < 5) {
+      final location = downloadResponse.headers.value('location');
+      if (location == null) break;
+
+      final redirectUri = Uri.parse(location);
+      await downloadResponse.drain();
+
+      request = await client.getUrl(redirectUri);
+      downloadResponse = await request.close();
+      redirectCount++;
+    }
+
+    if (downloadResponse.statusCode != 200) {
+      await downloadResponse.drain();
+      client.close();
+      throw Exception('下载失败: HTTP ${downloadResponse.statusCode}');
+    }
+
+    final bytes = await downloadResponse.fold<List<int>>(
+      <int>[],
+      (previous, element) => previous..addAll(element),
+    );
+    client.close();
+
+    // 保存到 assets/tools 目录
+    final toolDir = Directory(p.join(projectRoot, 'assets', 'tools'));
+    if (!await toolDir.exists()) {
+      await toolDir.create(recursive: true);
+    }
+
+    final toolPath = p.join(toolDir.path, 'appimagetool');
+    final toolFile = File(toolPath);
+    await toolFile.writeAsBytes(bytes);
+
+    // 添加执行权限
+    await Process.run('chmod', ['+x', toolPath]);
+
+    final sizeInMB = (bytes.length / (1024 * 1024)).toStringAsFixed(2);
+    log('✅ appimagetool 安装完成 ($sizeInMB MB)');
+  } catch (e) {
+    throw Exception('下载 appimagetool 失败: ${simplifyError(e)}');
+  }
+}
+
+// 使用 sudo 运行命令（支持从 stdin 读取密码）
+Future<void> _runSudoCommand(List<String> command) async {
+  log('🔐 需要管理员权限执行: ${command.join(' ')}');
+
+  // 使用 -S 选项从 stdin 读取密码
+  final process = await Process.start(
+    'sudo',
+    ['-S', ...command],
+    mode: ProcessStartMode.inheritStdio,
+  );
+
+  final exitCode = await process.exitCode;
+  if (exitCode != 0) {
+    throw Exception('命令执行失败: sudo ${command.join(' ')}');
   }
 }
