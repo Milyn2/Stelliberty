@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:rinf/rinf.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:stelliberty/utils/logger.dart';
@@ -335,7 +336,8 @@ class TrayEventHandler with TrayListener {
         Logger.error('保存窗口状态失败：$e');
       }
 
-      // 3. 退出
+      // 3. 关闭 Rust 异步运行时
+      finalizeRust();
 
       exit(0);
     } catch (e) {

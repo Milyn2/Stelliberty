@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:rinf/rinf.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:stelliberty/providers/window_effect_provider.dart';
@@ -174,7 +175,10 @@ class WindowButtons extends StatelessWidget {
       Logger.error('保存窗口状态失败：$e');
     }
 
-    // 3. 所有清理操作已完成，直接退出
+    // 3. 关闭 Rust 异步运行时
+    finalizeRust();
+
+    // 4. 退出应用
     Logger.info('应用即将退出');
     exit(0);
   }

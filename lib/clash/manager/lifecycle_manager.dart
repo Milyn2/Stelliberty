@@ -785,6 +785,11 @@ class LifecycleManager {
   // 启动服务心跳定时器（仅服务模式使用）
   void _startServiceHeartbeat() {
     _serviceHeartbeatTimer?.cancel();
+
+    // 立即发送第一次心跳，避免服务启动后等待30秒导致超时
+    Logger.debug('发送服务心跳（立即）');
+    SendServiceHeartbeat().sendSignalToRust();
+
     _serviceHeartbeatTimer = Timer.periodic(const Duration(seconds: 30), (
       timer,
     ) {

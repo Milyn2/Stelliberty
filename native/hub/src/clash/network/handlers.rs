@@ -3,6 +3,19 @@
 // 处理 Dart 层发送的 IPC 请求，通过 IpcClient 转发给 Clash 核心
 
 use super::ipc_client::IpcClient;
+
+// 检查错误是否为 IPC 尚未就绪（启动时的正常情况）
+fn is_ipc_not_ready_error(error_msg: &str) -> bool {
+    // Windows: os error 2 (系统找不到指定的文件)
+    // Linux: os error 111 (ECONNREFUSED，拒绝连接)
+    // macOS: os error 61 (ECONNREFUSED，拒绝连接)
+    error_msg.contains("系统找不到指定的文件")
+        || error_msg.contains("os error 2")
+        || error_msg.contains("拒绝连接")
+        || error_msg.contains("os error 111")
+        || error_msg.contains("os error 61")
+        || error_msg.contains("Connection refused")
+}
 use super::messages::{
     IpcDeleteRequest, IpcGetRequest, IpcLogData, IpcPatchRequest, IpcPostRequest, IpcPutRequest,
     IpcResponse, IpcTrafficData, StartLogStream, StartTrafficStream, StopLogStream,
@@ -268,13 +281,8 @@ impl IpcGetRequest {
                 Ok(c) => c,
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC GET 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC GET 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC GET 获取连接失败：{}，error：{}", self.path, e);
                     }
@@ -321,13 +329,8 @@ impl IpcGetRequest {
                 Err(e) => {
                     // 连接已失效，不归还
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC GET 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC GET 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC GET 请求失败：{}，error：{}", self.path, e);
                     }
@@ -354,13 +357,8 @@ impl IpcPostRequest {
                 Ok(c) => c,
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC POST 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC POST 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC POST 获取连接失败：{}，error：{}", self.path, e);
                     }
@@ -399,13 +397,8 @@ impl IpcPostRequest {
                 }
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC POST 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC POST 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC POST 请求失败：{}，error：{}", self.path, e);
                     }
@@ -450,13 +443,8 @@ impl IpcPutRequest {
                 Ok(c) => c,
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC PUT 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC PUT 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC PUT 获取连接失败：{}，error：{}", self.path, e);
                     }
@@ -497,13 +485,8 @@ impl IpcPutRequest {
                 }
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC PUT 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC PUT 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC PUT 请求失败：{}，error：{}", self.path, e);
                     }
@@ -531,13 +514,8 @@ impl IpcPatchRequest {
                 Ok(c) => c,
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC PATCH 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC PATCH 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC PATCH 获取连接失败：{}，error：{}", self.path, e);
                     }
@@ -576,13 +554,8 @@ impl IpcPatchRequest {
                 }
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC PATCH 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC PATCH 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC PATCH 请求失败：{}，error：{}", self.path, e);
                     }
@@ -609,13 +582,8 @@ impl IpcDeleteRequest {
                 Ok(c) => c,
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC DELETE 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC DELETE 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC DELETE 获取连接失败：{}，error：{}", self.path, e);
                     }
@@ -647,13 +615,8 @@ impl IpcDeleteRequest {
                 }
                 Err(e) => {
                     let error_msg = e.to_string();
-                    if error_msg.contains("系统找不到指定的文件")
-                        || error_msg.contains("os error 2")
-                    {
-                        log::trace!(
-                            "IPC DELETE 请求等待中：{}，原因：Named Pipe 尚未就绪",
-                            self.path
-                        );
+                    if is_ipc_not_ready_error(&error_msg) {
+                        log::trace!("IPC DELETE 请求等待中：{}，原因：IPC 尚未就绪", self.path);
                     } else {
                         log::error!("IPC DELETE 请求失败：{}，error：{}", self.path, e);
                     }
