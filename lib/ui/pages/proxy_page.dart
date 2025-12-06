@@ -332,6 +332,7 @@ class _ProxyPageWidgetState extends State<ProxyPage>
               onLocate: () => _locateSelectedNode(context, clashProvider),
               sortMode: _viewModel.sortMode,
               onSortModeChanged: _viewModel.changeSortMode,
+              viewModel: _viewModel,
             );
           },
         ),

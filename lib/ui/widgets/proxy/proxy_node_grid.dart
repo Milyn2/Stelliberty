@@ -4,8 +4,29 @@ import 'package:stelliberty/clash/providers/clash_provider.dart';
 import 'package:stelliberty/clash/data/clash_model.dart';
 import 'package:stelliberty/ui/widgets/proxy/proxy_node_card.dart';
 import 'package:stelliberty/ui/notifiers/proxy_notifier.dart';
+import 'package:stelliberty/ui/constants/spacing.dart';
 import 'package:stelliberty/utils/logger.dart';
 import 'package:stelliberty/i18n/i18n.dart';
+
+// 代理页布局常量
+class _ProxyGridSpacing {
+  _ProxyGridSpacing._();
+
+  static const gridLeftEdge = 16.0; // 最左侧卡片距左边距离
+  static const gridTopEdge = 10.0; // 第一行卡片距顶部距离
+  static const gridRightEdge =
+      16.0 - SpacingConstants.scrollbarRightCompensation; // 最右侧卡片距右边距离（补偿滚动条）
+  static const gridBottomEdge = 10.0; // 最后一行卡片距底部距离
+  static const cardColumnSpacing = 16.0; // 卡片列间距（左右间距）
+  static const cardRowSpacing = 16.0; // 卡片行间距（上下间距）
+
+  static const gridPadding = EdgeInsets.fromLTRB(
+    gridLeftEdge,
+    gridTopEdge,
+    gridRightEdge,
+    gridBottomEdge,
+  );
+}
 
 // 代理节点网格状态（用于 Selector）
 class _ProxyNodeGridState {
@@ -127,11 +148,11 @@ class _ProxyNodeGridWidgetState extends State<ProxyNodeGrid> {
 
                     return GridView.builder(
                       controller: widget.scrollController,
-                      padding: const EdgeInsets.fromLTRB(16.0, 6.0, 16.0, 20.0),
+                      padding: _ProxyGridSpacing.gridPadding,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 16.0,
-                        mainAxisSpacing: 16.0,
+                        crossAxisSpacing: _ProxyGridSpacing.cardColumnSpacing,
+                        mainAxisSpacing: _ProxyGridSpacing.cardRowSpacing,
                         mainAxisExtent: 88.0,
                       ),
                       itemCount: sortedGroup.all.length,

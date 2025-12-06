@@ -626,6 +626,8 @@
     "tunSwitchFailed": "切换虚拟网卡失败",
     "testDelay": "测试延迟",
     "locate": "定位",
+    "search": "搜索",
+    "searchHint": "输入节点名称...",
     "noSelectedNode": "当前没有选中的节点",
     "cannotFindNode": "无法找到当前选中的节点",
     "locatedTo": "已定位到: {name}",

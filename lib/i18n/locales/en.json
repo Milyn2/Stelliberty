@@ -623,6 +623,8 @@
     "scrollRight": "Scroll right",
     "testDelay": "Test Delay",
     "locate": "Locate",
+    "search": "Search",
+    "searchHint": "Enter node name...",
     "noSelectedNode": "No selected node",
     "cannotFindNode": "Cannot find selected node",
     "locatedTo": "Located to: {name}",

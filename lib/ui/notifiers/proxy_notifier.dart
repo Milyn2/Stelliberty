@@ -5,11 +5,13 @@ import 'package:stelliberty/clash/data/clash_model.dart';
 import 'package:stelliberty/utils/logger.dart';
 
 // ProxyPage 的业务逻辑
-// 负责代理节点排序和定位计算
+// 负责代理节点排序、搜索和定位计算
 class ProxyNotifier extends ChangeNotifier {
   final ClashProvider _clashProvider;
 
   int _sortMode = 0;
+  String _searchQuery = '';
+  bool _isSearching = false;
 
   // UI 常量（用于定位计算）
   static const double proxyCardHeight = 88.0;
@@ -24,6 +26,32 @@ class ProxyNotifier extends ChangeNotifier {
   // ========== Getters ==========
 
   int get sortMode => _sortMode;
+  String get searchQuery => _searchQuery;
+  bool get isSearching => _isSearching;
+
+  // ========== 搜索功能 ==========
+
+  // 切换搜索状态
+  void toggleSearch() {
+    _isSearching = !_isSearching;
+    if (!_isSearching) {
+      _searchQuery = '';
+    }
+    notifyListeners();
+  }
+
+  // 关闭搜索
+  void closeSearch() {
+    _isSearching = false;
+    _searchQuery = '';
+    notifyListeners();
+  }
+
+  // 更新搜索关键字
+  void updateSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
 
   // ========== 排序功能 ==========
 
@@ -41,13 +69,22 @@ class ProxyNotifier extends ChangeNotifier {
     Logger.info('排序模式已更改：$_sortMode');
   }
 
-  // 根据当前排序模式对代理名称列表进行排序
+  // 根据当前排序模式对代理名称列表进行排序（并应用搜索过滤）
   List<String> getSortedProxyNames(List<String> proxyNames) {
-    if (_sortMode == 0) {
-      return proxyNames; // 默认排序（配置文件顺序）
+    // 先应用搜索过滤
+    List<String> filteredNames = proxyNames;
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filteredNames = proxyNames.where((name) {
+        return name.toLowerCase().contains(query);
+      }).toList();
     }
 
-    final sortedNames = List<String>.from(proxyNames);
+    if (_sortMode == 0) {
+      return filteredNames; // 默认排序（配置文件顺序）
+    }
+
+    final sortedNames = List<String>.from(filteredNames);
 
     if (_sortMode == 1) {
       // 按名称排序
