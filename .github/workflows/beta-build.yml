@@ -132,7 +132,7 @@ jobs:
             os: ubuntu-22.04
             arch: x64
           - platform: macos
-            os: macos-latest
+            os: macos-13
             arch: x64
           - platform: macos
             os: macos-latest
@@ -234,41 +234,10 @@ jobs:
                 exit 1
               }
             '
-          elif [ "$RUNNER_OS" = "Linux" ]; then
+          else
             mkdir -p dist
             if [ -d "build/packages" ]; then
               cp -r build/packages/* dist/
-              echo "✅ 构建产物已复制到 dist/"
-              echo ""
-              echo "📦 产物列表:"
-              ls -lh dist/
-            else
-              echo "❌ 错误: build/packages 目录不存在"
-              exit 1
-            fi
-          elif [ "$RUNNER_OS" = "macOS" ]; then
-            mkdir -p dist
-            if [ -d "build/packages" ]; then
-              # 为不同架构的文件添加唯一标识符，避免上传冲突
-              for file in build/packages/*; do
-                filename=$(basename "$file")
-                # 如果文件不包含架构标识符，则添加
-                if [[ "$filename" != *"${{ matrix.arch }}"* ]]; then
-                  # 获取文件扩展名
-                  extension="${filename##*.}"
-                  # 获取文件名（不含扩展名）
-                  basename="${filename%.*}"
-                  # 创建新文件名，包含架构标识符
-                  new_filename="${basename}-${{ matrix.arch }}.${extension}"
-                  # 复制并重命名文件
-                  cp "$file" "dist/$new_filename"
-                  echo "📦 重命名: $filename -> $new_filename"
-                else
-                  # 文件已包含架构标识符，直接复制
-                  cp "$file" "dist/"
-                  echo "📦 复制: $filename"
-                fi
-              done
               echo "✅ 构建产物已复制到 dist/"
               echo ""
               echo "📦 产物列表:"
