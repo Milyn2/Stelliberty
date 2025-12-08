@@ -42,15 +42,12 @@ class LogPage extends StatefulWidget {
 
 class _LogPageState extends State<LogPage> {
   final ScrollController _scrollController = ScrollController();
-  bool _autoScroll = true;
-  int _previousLogCount = 0; // 记录上一次的日志数量
   bool _isFirstLoad = true; // 标记是否是首次加载
 
   @override
   void initState() {
     super.initState();
     Logger.info('初始化 LogPage');
-    _scrollController.addListener(_onScroll);
 
     // 延迟加载日志列表（给顶栏先渲染的机会）
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -58,7 +55,6 @@ class _LogPageState extends State<LogPage> {
         setState(() {
           _isFirstLoad = false;
         });
-        _scrollToBottom();
       }
     });
   }
@@ -67,28 +63,6 @@ class _LogPageState extends State<LogPage> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
-  }
-
-  // 监听滚动，判断是否自动滚动
-  void _onScroll() {
-    if (!_scrollController.hasClients) return;
-
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final currentScroll = _scrollController.position.pixels;
-    // 如果用户滚动到接近底部（100px 范围内），启用自动滚动
-    setState(() {
-      _autoScroll = (maxScroll - currentScroll) < 100;
-    });
-  }
-
-  // 滚动到底部
-  void _scrollToBottom() {
-    if (!_scrollController.hasClients) return;
-
-    final provider = context.read<LogProvider>();
-    if (!_autoScroll || provider.isPaused) return;
-
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
 
   @override
@@ -298,13 +272,7 @@ class _LogPageState extends State<LogPage> {
                   ModernIconTooltip(
                     message: context.translate.logs.clearLogs,
                     icon: Icons.delete_outline_rounded,
-                    onPressed: provider.logs.isEmpty
-                        ? null
-                        : () {
-                            provider.clearLogs();
-                            // 重置日志计数，确保下次新增日志时能正确滚动
-                            _previousLogCount = 0;
-                          },
+                    onPressed: provider.logs.isEmpty ? null : provider.clearLogs,
                     iconSize: 20,
                   ),
                 ],
@@ -383,15 +351,6 @@ class _LogPageState extends State<LogPage> {
           );
         }
 
-        // 智能滚动：只在日志数量增加时滚动
-        final currentLogCount = provider.logs.length;
-        if (currentLogCount > _previousLogCount) {
-          _previousLogCount = currentLogCount;
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _scrollToBottom(),
-          );
-        }
-
         return Scrollbar(
           controller: _scrollController,
           child: GridView.builder(
@@ -406,7 +365,9 @@ class _LogPageState extends State<LogPage> {
             addAutomaticKeepAlives: false, // 减少内存占用
             addRepaintBoundaries: true, // 优化重绘性能
             itemBuilder: (context, index) {
-              return LogCard(log: filteredLogs[index]);
+              // 倒序显示日志（最新的在顶部）
+              final reversedIndex = filteredLogs.length - 1 - index;
+              return LogCard(log: filteredLogs[reversedIndex]);
             },
           ),
         );

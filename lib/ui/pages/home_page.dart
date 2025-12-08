@@ -24,56 +24,62 @@ class _HomePageContentState extends State<HomePageContent> {
 
   @override
   Widget build(BuildContext context) {
+    final scrollController = ScrollController();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return Padding(
           padding: SpacingConstants.scrollbarPadding,
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight:
-                    constraints.maxHeight -
-                    SpacingConstants.scrollbarPaddingTop -
-                    SpacingConstants.scrollbarPaddingBottom,
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  25.0,
-                  24.0,
-                  25.0 - SpacingConstants.scrollbarRightCompensation,
-                  2.0, // 距底2px
+          child: Scrollbar(
+            controller: scrollController,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      constraints.maxHeight -
+                      SpacingConstants.scrollbarPaddingTop -
+                      SpacingConstants.scrollbarPaddingBottom,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    // 第一行：代理控制卡片 + TUN 模式卡片
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(child: ProxySwitchCard()),
-                          const SizedBox(width: 25),
-                          Expanded(child: TunModeCard()),
-                        ],
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    25.0,
+                    24.0,
+                    25.0 - SpacingConstants.scrollbarRightCompensation,
+                    2.0, // 距底2px
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      // 第一行：代理控制卡片 + TUN 模式卡片
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(child: ProxySwitchCard()),
+                            const SizedBox(width: 25),
+                            Expanded(child: TunModeCard()),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    // 第二行：流量统计卡片（占据整行）
-                    TrafficStatsCard(),
-                    const SizedBox(height: 24),
-                    // 第三行：Clash 信息卡片 + 出站模式卡片
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(child: ClashInfoCard()),
-                          const SizedBox(width: 25),
-                          Expanded(child: OutboundModeCard()),
-                        ],
+                      const SizedBox(height: 24),
+                      // 第二行：流量统计卡片（占据整行）
+                      TrafficStatsCard(),
+                      const SizedBox(height: 24),
+                      // 第三行：Clash 信息卡片 + 出站模式卡片
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(child: ClashInfoCard()),
+                            const SizedBox(width: 25),
+                            Expanded(child: OutboundModeCard()),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

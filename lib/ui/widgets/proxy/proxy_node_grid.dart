@@ -146,21 +146,23 @@ class _ProxyNodeGridWidgetState extends State<ProxyNodeGrid> {
                       widget.onCrossAxisCountChanged(crossAxisCount);
                     }
 
-                    return GridView.builder(
+                    return Scrollbar(
                       controller: widget.scrollController,
-                      padding: _ProxyGridSpacing.gridPadding,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: _ProxyGridSpacing.cardColumnSpacing,
-                        mainAxisSpacing: _ProxyGridSpacing.cardRowSpacing,
-                        mainAxisExtent: 88.0,
-                      ),
-                      itemCount: sortedGroup.all.length,
-                      // 优化渲染性能
-                      cacheExtent: 500.0,
-                      addAutomaticKeepAlives: true,
-                      addRepaintBoundaries: true,
-                      itemBuilder: (context, index) {
+                      child: GridView.builder(
+                        controller: widget.scrollController,
+                        padding: _ProxyGridSpacing.gridPadding,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: _ProxyGridSpacing.cardColumnSpacing,
+                          mainAxisSpacing: _ProxyGridSpacing.cardRowSpacing,
+                          mainAxisExtent: 88.0,
+                        ),
+                        itemCount: sortedGroup.all.length,
+                        // 优化渲染性能
+                        cacheExtent: 500.0,
+                        addAutomaticKeepAlives: true,
+                        addRepaintBoundaries: true,
+                        itemBuilder: (context, index) {
                         final proxyName = sortedGroup.all[index];
                         final node = state.proxyNodes[proxyName];
 
@@ -202,6 +204,7 @@ class _ProxyNodeGridWidgetState extends State<ProxyNodeGrid> {
                           ),
                         );
                       },
+                      ),
                     );
                   },
                 );
