@@ -79,72 +79,68 @@ class _BehaviorSettingsPageState extends State<BehaviorSettingsPage> {
         ),
         // 可滚动内容
         Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: Padding(
-              padding: SpacingConstants.scrollbarPadding,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  32,
-                  16,
-                  32 - SpacingConstants.scrollbarRightCompensation,
-                  16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 开机自启动卡片
-                    _buildSwitchCard(
-                      icon: Icons.power_settings_new_outlined,
-                      title: context.translate.behavior.autoStartTitle,
-                      subtitle: context.translate.behavior.autoStartDescription,
-                      value: _autoStartEnabled,
-                      onChanged: _updateAutoStartSetting,
-                    ),
+          child: Padding(
+            padding: SpacingConstants.scrollbarPadding,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                32,
+                16,
+                32 - SpacingConstants.scrollbarRightCompensation,
+                16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 开机自启动卡片
+                  _buildSwitchCard(
+                    icon: Icons.power_settings_new_outlined,
+                    title: context.translate.behavior.autoStartTitle,
+                    subtitle: context.translate.behavior.autoStartDescription,
+                    value: _autoStartEnabled,
+                    onChanged: _updateAutoStartSetting,
+                  ),
 
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                    // 静默启动卡片
-                    _buildSwitchCard(
-                      icon: Icons.visibility_off_outlined,
-                      title: context.translate.behavior.silentStartTitle,
-                      subtitle:
-                          context.translate.behavior.silentStartDescription,
-                      value: _silentStartEnabled,
-                      onChanged: _updateSilentStartSetting,
-                    ),
+                  // 静默启动卡片
+                  _buildSwitchCard(
+                    icon: Icons.visibility_off_outlined,
+                    title: context.translate.behavior.silentStartTitle,
+                    subtitle: context.translate.behavior.silentStartDescription,
+                    value: _silentStartEnabled,
+                    onChanged: _updateSilentStartSetting,
+                  ),
 
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                    // 最小化到托盘卡片
-                    _buildSwitchCard(
-                      icon: Icons.remove_circle_outline,
-                      title: context.translate.behavior.minimizeToTrayTitle,
-                      subtitle:
-                          context.translate.behavior.minimizeToTrayDescription,
-                      value: _minimizeToTray,
-                      onChanged: _updateMinimizeToTraySetting,
-                    ),
+                  // 最小化到托盘卡片
+                  _buildSwitchCard(
+                    icon: Icons.remove_circle_outline,
+                    title: context.translate.behavior.minimizeToTrayTitle,
+                    subtitle:
+                        context.translate.behavior.minimizeToTrayDescription,
+                    value: _minimizeToTray,
+                    onChanged: _updateMinimizeToTraySetting,
+                  ),
 
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                    // 应用日志卡片
-                    _buildSwitchCard(
-                      icon: Icons.description_outlined,
-                      title: context.translate.behavior.appLogTitle,
-                      subtitle: context.translate.behavior.appLogDescription,
-                      value: _appLogEnabled,
-                      onChanged: _updateAppLogSetting,
-                    ),
+                  // 应用日志卡片
+                  _buildSwitchCard(
+                    icon: Icons.description_outlined,
+                    title: context.translate.behavior.appLogTitle,
+                    subtitle: context.translate.behavior.appLogDescription,
+                    value: _appLogEnabled,
+                    onChanged: _updateAppLogSetting,
+                  ),
 
-                    const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                    // 懒惰模式卡片
-                    const LazyModeCard(),
-                  ],
-                ),
+                  // 懒惰模式卡片
+                  const LazyModeCard(),
+                ],
               ),
             ),
           ),

@@ -136,30 +136,27 @@ class _AppUpdateSettingsPageState extends State<AppUpdateSettingsPage> {
         ),
         // 可滚动内容
         Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: Padding(
-              padding: SpacingConstants.scrollbarPadding,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  32,
-                  16,
-                  32 - SpacingConstants.scrollbarRightCompensation,
-                  16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 自动更新开关（带检查更新按钮）
-                    _buildAutoUpdateCard(),
-                    const SizedBox(height: 16),
+          child: Padding(
+            padding: SpacingConstants.scrollbarPadding,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                32,
+                16,
+                32 - SpacingConstants.scrollbarRightCompensation,
+                16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 自动更新开关（带检查更新按钮）
+                  _buildAutoUpdateCard(),
+                  const SizedBox(height: 16),
 
-                    // 更新检测时间选择
-                    _buildIntervalCard(),
-                  ],
-                ),
+                  // 更新检测时间选择
+                  _buildIntervalCard(),
+                ],
               ),
             ),
           ),

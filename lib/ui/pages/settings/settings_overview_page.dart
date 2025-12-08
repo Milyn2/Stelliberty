@@ -5,6 +5,7 @@ import 'package:stelliberty/providers/content_provider.dart';
 import 'package:stelliberty/i18n/i18n.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:stelliberty/utils/logger.dart';
+import 'package:stelliberty/ui/constants/spacing.dart';
 
 export 'behavior_settings_page.dart';
 
@@ -40,84 +41,88 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Text(
-            context.translate.common.settings,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+      body: Padding(
+        padding: SpacingConstants.scrollbarPadding,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text(
+              context.translate.common.settings,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            leading: const Icon(Icons.palette_outlined),
-            title: Text(context.translate.theme.title),
-            subtitle: Text(context.translate.theme.description),
-            onTap: () => provider.switchView(ContentView.settingsAppearance),
-            // 只移除点击时的水波纹扩散效果，保留悬停效果
-            splashColor: Colors.transparent,
-          ),
-          ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            leading: const Icon(Icons.language_outlined),
-            title: Text(context.translate.language.title),
-            subtitle: Text(context.translate.language.description),
-            onTap: () => provider.switchView(ContentView.settingsLanguage),
-            // 只移除点击时的水波纹扩散效果，保留悬停效果
-            splashColor: Colors.transparent,
-          ),
-          ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            leading: const Icon(Icons.settings_suggest_outlined),
-            title: Text(context.translate.clashFeatures.title),
-            subtitle: Text(context.translate.clashFeatures.description),
-            onTap: () => provider.switchView(ContentView.settingsClashFeatures),
-            // 只移除点击时的水波纹扩散效果，保留悬停效果
-            splashColor: Colors.transparent,
-          ),
-          ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            leading: const Icon(Icons.apps_outlined),
-            title: Text(context.translate.behavior.title),
-            subtitle: Text(context.translate.behavior.description),
-            onTap: () => provider.switchView(ContentView.settingsBehavior),
-            // 只移除点击时的水波纹扩散效果，保留悬停效果
-            splashColor: Colors.transparent,
-          ),
-          // 应用更新选项只在 Windows 平台显示
-          if (Platform.isWindows)
+            const SizedBox(height: 20),
             ListTile(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              leading: const Icon(Icons.new_releases_outlined),
-              title: Text(context.translate.appUpdate.title),
-              subtitle: Text(context.translate.appUpdate.description),
-              onTap: () => provider.switchView(ContentView.settingsAppUpdate),
+              leading: const Icon(Icons.palette_outlined),
+              title: Text(context.translate.theme.title),
+              subtitle: Text(context.translate.theme.description),
+              onTap: () => provider.switchView(ContentView.settingsAppearance),
               // 只移除点击时的水波纹扩散效果，保留悬停效果
               splashColor: Colors.transparent,
             ),
-          ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              leading: const Icon(Icons.language_outlined),
+              title: Text(context.translate.language.title),
+              subtitle: Text(context.translate.language.description),
+              onTap: () => provider.switchView(ContentView.settingsLanguage),
+              // 只移除点击时的水波纹扩散效果，保留悬停效果
+              splashColor: Colors.transparent,
             ),
-            leading: const Icon(Icons.info_outline),
-            title: Text(context.translate.about.title),
-            subtitle: Text(_version.isEmpty ? '…' : _version),
-            onTap: null,
-            splashColor: Colors.transparent,
-          ),
-        ],
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              leading: const Icon(Icons.settings_suggest_outlined),
+              title: Text(context.translate.clashFeatures.title),
+              subtitle: Text(context.translate.clashFeatures.description),
+              onTap: () =>
+                  provider.switchView(ContentView.settingsClashFeatures),
+              // 只移除点击时的水波纹扩散效果，保留悬停效果
+              splashColor: Colors.transparent,
+            ),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              leading: const Icon(Icons.apps_outlined),
+              title: Text(context.translate.behavior.title),
+              subtitle: Text(context.translate.behavior.description),
+              onTap: () => provider.switchView(ContentView.settingsBehavior),
+              // 只移除点击时的水波纹扩散效果，保留悬停效果
+              splashColor: Colors.transparent,
+            ),
+            // 应用更新选项只在 Windows 平台显示
+            if (Platform.isWindows)
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                leading: const Icon(Icons.new_releases_outlined),
+                title: Text(context.translate.appUpdate.title),
+                subtitle: Text(context.translate.appUpdate.description),
+                onTap: () => provider.switchView(ContentView.settingsAppUpdate),
+                // 只移除点击时的水波纹扩散效果，保留悬停效果
+                splashColor: Colors.transparent,
+              ),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              leading: const Icon(Icons.info_outline),
+              title: Text(context.translate.about.title),
+              subtitle: Text(_version.isEmpty ? '…' : _version),
+              onTap: null,
+              splashColor: Colors.transparent,
+            ),
+          ],
+        ),
       ),
     );
   }

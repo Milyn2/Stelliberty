@@ -182,60 +182,53 @@ class _OverridePageState extends State<OverridePage> {
             );
           }
 
-          return Scrollbar(
+          return ReorderableGridView.builder(
             controller: scrollController,
-            child: ReorderableGridView.builder(
-              controller: scrollController,
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                mainAxisExtent: 80,
-              ),
-              itemCount: provider.overrides.length,
-              onReorder: (oldIndex, newIndex) {
-                provider.reorderOverrides(
-                  oldIndex,
-                  newIndex,
-                  autoAdjust: false,
-                );
-              },
-              dragWidgetBuilder: (index, child) {
-                final override = provider.overrides[index];
-                final isUpdating = provider.isOverrideUpdating(override.id);
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              mainAxisExtent: 80,
+            ),
+            itemCount: provider.overrides.length,
+            onReorder: (oldIndex, newIndex) {
+              provider.reorderOverrides(oldIndex, newIndex, autoAdjust: false);
+            },
+            dragWidgetBuilder: (index, child) {
+              final override = provider.overrides[index];
+              final isUpdating = provider.isOverrideUpdating(override.id);
 
-                return Material(
-                  color: Colors.transparent,
-                  elevation: 0,
-                  child: OverrideCard(
-                    key: ValueKey(override.id),
-                    config: override,
-                    isUpdating: isUpdating,
-                    isDragging: true,
-                    onUpdate: () => provider.updateRemoteOverride(override.id),
-                    onEditConfig: () => _editOverride(override),
-                    onEditFile: () => _editOverrideFile(override),
-                    onDelete: () => _deleteOverride(override),
-                  ),
-                );
-              },
-              itemBuilder: (context, index) {
-                final override = provider.overrides[index];
-                final isUpdating = provider.isOverrideUpdating(override.id);
-
-                return OverrideCard(
+              return Material(
+                color: Colors.transparent,
+                elevation: 0,
+                child: OverrideCard(
                   key: ValueKey(override.id),
                   config: override,
                   isUpdating: isUpdating,
-                  isDragging: false,
+                  isDragging: true,
                   onUpdate: () => provider.updateRemoteOverride(override.id),
                   onEditConfig: () => _editOverride(override),
                   onEditFile: () => _editOverrideFile(override),
                   onDelete: () => _deleteOverride(override),
-                );
-              },
-            ),
+                ),
+              );
+            },
+            itemBuilder: (context, index) {
+              final override = provider.overrides[index];
+              final isUpdating = provider.isOverrideUpdating(override.id);
+
+              return OverrideCard(
+                key: ValueKey(override.id),
+                config: override,
+                isUpdating: isUpdating,
+                isDragging: false,
+                onUpdate: () => provider.updateRemoteOverride(override.id),
+                onEditConfig: () => _editOverride(override),
+                onEditFile: () => _editOverrideFile(override),
+                onDelete: () => _deleteOverride(override),
+              );
+            },
           );
         },
       ),

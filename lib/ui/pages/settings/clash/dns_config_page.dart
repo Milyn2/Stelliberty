@@ -56,23 +56,20 @@ class _DnsConfigPageState extends State<DnsConfigPage> {
         ),
         // 可滚动内容
         Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: Padding(
-              padding: SpacingConstants.scrollbarPadding,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  32,
-                  16,
-                  32 - SpacingConstants.scrollbarRightCompensation,
-                  16,
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [DnsConfigCard()],
-                ),
+          child: Padding(
+            padding: SpacingConstants.scrollbarPadding,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                32,
+                16,
+                32 - SpacingConstants.scrollbarRightCompensation,
+                16,
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [DnsConfigCard()],
               ),
             ),
           ),

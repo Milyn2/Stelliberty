@@ -316,27 +316,24 @@ class _ConnectionPageContentState extends State<ConnectionPageContent> {
     }
 
     // 固定每行两个卡片
-    return Scrollbar(
+    return GridView.builder(
       controller: _scrollController,
-      child: GridView.builder(
-        controller: _scrollController,
-        padding: _ConnectionGridSpacing.gridPadding,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, // 固定每行两个
-          crossAxisSpacing: _ConnectionGridSpacing.cardColumnSpacing,
-          mainAxisSpacing: _ConnectionGridSpacing.cardRowSpacing,
-          mainAxisExtent: 120.0, // 更紧凑的卡片高度
-        ),
-        itemCount: connections.length,
-        itemBuilder: (context, index) {
-          final connection = connections[index];
-          return ConnectionCard(
-            connection: connection,
-            onTap: () => _showConnectionDetails(context, connection),
-            onClose: () => _closeConnection(context, provider, connection),
-          );
-        },
+      padding: _ConnectionGridSpacing.gridPadding,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, // 固定每行两个
+        crossAxisSpacing: _ConnectionGridSpacing.cardColumnSpacing,
+        mainAxisSpacing: _ConnectionGridSpacing.cardRowSpacing,
+        mainAxisExtent: 120.0, // 更紧凑的卡片高度
       ),
+      itemCount: connections.length,
+      itemBuilder: (context, index) {
+        final connection = connections[index];
+        return ConnectionCard(
+          connection: connection,
+          onTap: () => _showConnectionDetails(context, connection),
+          onClose: () => _closeConnection(context, provider, connection),
+        );
+      },
     );
   }
 

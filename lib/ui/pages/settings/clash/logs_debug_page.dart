@@ -57,27 +57,20 @@ class _LogsDebugPageState extends State<LogsDebugPage> {
         ),
         // 可滚动内容
         Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: Padding(
-              padding: SpacingConstants.scrollbarPadding,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  32,
-                  16,
-                  32 - SpacingConstants.scrollbarRightCompensation,
-                  16,
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LogLevelCard(),
-                    SizedBox(height: 16),
-                    TestUrlCard(),
-                  ],
-                ),
+          child: Padding(
+            padding: SpacingConstants.scrollbarPadding,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                32,
+                16,
+                32 - SpacingConstants.scrollbarRightCompensation,
+                16,
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [LogLevelCard(), SizedBox(height: 16), TestUrlCard()],
               ),
             ),
           ),

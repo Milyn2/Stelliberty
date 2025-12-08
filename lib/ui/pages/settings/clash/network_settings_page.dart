@@ -73,118 +73,115 @@ class _NetworkSettingsPageState extends State<NetworkSettingsPage> {
         ),
         // 可滚动内容
         Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: Padding(
-              padding: SpacingConstants.scrollbarPadding,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  32,
-                  16,
-                  32 - SpacingConstants.scrollbarRightCompensation,
-                  16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 统一延迟
-                    _buildSwitchCard(
-                      context: context,
-                      icon: Icons.speed,
-                      title: context
-                          .translate
-                          .clashFeatures
-                          .networkSettings
-                          .unifiedDelay
-                          .title,
-                      subtitle: context
-                          .translate
-                          .clashFeatures
-                          .networkSettings
-                          .unifiedDelay
-                          .subtitle,
-                      value: _unifiedDelay,
-                      onChanged: (value) {
-                        setState(() => _unifiedDelay = value);
-                        clashProvider.configService.setUnifiedDelay(value);
-                      },
-                    ),
-                    const SizedBox(height: 16),
+          child: Padding(
+            padding: SpacingConstants.scrollbarPadding,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                32,
+                16,
+                32 - SpacingConstants.scrollbarRightCompensation,
+                16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 统一延迟
+                  _buildSwitchCard(
+                    context: context,
+                    icon: Icons.speed,
+                    title: context
+                        .translate
+                        .clashFeatures
+                        .networkSettings
+                        .unifiedDelay
+                        .title,
+                    subtitle: context
+                        .translate
+                        .clashFeatures
+                        .networkSettings
+                        .unifiedDelay
+                        .subtitle,
+                    value: _unifiedDelay,
+                    onChanged: (value) {
+                      setState(() => _unifiedDelay = value);
+                      clashProvider.configService.setUnifiedDelay(value);
+                    },
+                  ),
+                  const SizedBox(height: 16),
 
-                    // 局域网代理
-                    _buildSwitchCard(
-                      context: context,
-                      icon: Icons.lan,
-                      title: context
-                          .translate
-                          .clashFeatures
-                          .networkSettings
-                          .allowLan
-                          .title,
-                      subtitle: context
-                          .translate
-                          .clashFeatures
-                          .networkSettings
-                          .allowLan
-                          .subtitle,
-                      value: _allowLan,
-                      onChanged: (value) {
-                        setState(() => _allowLan = value);
-                        clashProvider.configService.setAllowLan(value);
-                      },
-                    ),
-                    const SizedBox(height: 16),
+                  // 局域网代理
+                  _buildSwitchCard(
+                    context: context,
+                    icon: Icons.lan,
+                    title: context
+                        .translate
+                        .clashFeatures
+                        .networkSettings
+                        .allowLan
+                        .title,
+                    subtitle: context
+                        .translate
+                        .clashFeatures
+                        .networkSettings
+                        .allowLan
+                        .subtitle,
+                    value: _allowLan,
+                    onChanged: (value) {
+                      setState(() => _allowLan = value);
+                      clashProvider.configService.setAllowLan(value);
+                    },
+                  ),
+                  const SizedBox(height: 16),
 
-                    // IPv6
-                    _buildSwitchCard(
-                      context: context,
-                      icon: Icons.language,
-                      title: context
-                          .translate
-                          .clashFeatures
-                          .networkSettings
-                          .ipv6
-                          .title,
-                      subtitle: context
-                          .translate
-                          .clashFeatures
-                          .networkSettings
-                          .ipv6
-                          .subtitle,
-                      value: _ipv6,
-                      onChanged: (value) {
-                        setState(() => _ipv6 = value);
-                        clashProvider.configService.setIpv6(value);
-                      },
-                    ),
-                    const SizedBox(height: 16),
+                  // IPv6
+                  _buildSwitchCard(
+                    context: context,
+                    icon: Icons.language,
+                    title: context
+                        .translate
+                        .clashFeatures
+                        .networkSettings
+                        .ipv6
+                        .title,
+                    subtitle: context
+                        .translate
+                        .clashFeatures
+                        .networkSettings
+                        .ipv6
+                        .subtitle,
+                    value: _ipv6,
+                    onChanged: (value) {
+                      setState(() => _ipv6 = value);
+                      clashProvider.configService.setIpv6(value);
+                    },
+                  ),
+                  const SizedBox(height: 16),
 
-                    // TCP 并发
-                    _buildSwitchCard(
-                      context: context,
-                      icon: Icons.multiple_stop,
-                      title: context
-                          .translate
-                          .clashFeatures
-                          .networkSettings
-                          .tcpConcurrent
-                          .title,
-                      subtitle: context
-                          .translate
-                          .clashFeatures
-                          .networkSettings
-                          .tcpConcurrent
-                          .subtitle,
-                      value: _tcpConcurrent,
-                      onChanged: (value) {
-                        setState(() => _tcpConcurrent = value);
-                        clashProvider.configService.setTcpConcurrent(value);
-                      },
-                    ),
-                  ],
-                ),
+                  // TCP 并发
+                  _buildSwitchCard(
+                    context: context,
+                    icon: Icons.multiple_stop,
+                    title: context
+                        .translate
+                        .clashFeatures
+                        .networkSettings
+                        .tcpConcurrent
+                        .title,
+                    subtitle: context
+                        .translate
+                        .clashFeatures
+                        .networkSettings
+                        .tcpConcurrent
+                        .subtitle,
+                    value: _tcpConcurrent,
+                    onChanged: (value) {
+                      setState(() => _tcpConcurrent = value);
+                      clashProvider.configService.setTcpConcurrent(value);
+                    },
+                  ),
+                ],
               ),
             ),
           ),

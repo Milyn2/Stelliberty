@@ -107,204 +107,193 @@ class _PerformancePageState extends State<PerformancePage> {
         ),
         // 可滚动内容
         Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: Padding(
-              padding: SpacingConstants.scrollbarPadding,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  32,
-                  16,
-                  32 - SpacingConstants.scrollbarRightCompensation,
-                  16,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // GEO 数据加载模式
-                    ModernFeatureCard(
-                      isSelected: false,
-                      onTap: () {},
-                      enableHover: true,
-                      enableTap: false,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.public),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          context
-                                              .translate
-                                              .clashFeatures
-                                              .performance
-                                              .geodataLoader
-                                              .title,
-                                          style: theme.textTheme.titleMedium,
-                                        ),
-                                        Text(
-                                          context
-                                              .translate
-                                              .clashFeatures
-                                              .performance
-                                              .geodataLoader
-                                              .subtitle,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withAlpha(153),
-                                              ),
-                                        ),
-                                      ],
-                                    ),
+          child: Padding(
+            padding: SpacingConstants.scrollbarPadding,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                32,
+                16,
+                32 - SpacingConstants.scrollbarRightCompensation,
+                16,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // GEO 数据加载模式
+                  ModernFeatureCard(
+                    isSelected: false,
+                    onTap: () {},
+                    enableHover: true,
+                    enableTap: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 20,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(Icons.public),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        context
+                                            .translate
+                                            .clashFeatures
+                                            .performance
+                                            .geodataLoader
+                                            .title,
+                                        style: theme.textTheme.titleMedium,
+                                      ),
+                                      Text(
+                                        context
+                                            .translate
+                                            .clashFeatures
+                                            .performance
+                                            .geodataLoader
+                                            .subtitle,
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme.colorScheme.onSurface
+                                                  .withAlpha(153),
+                                            ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            MouseRegion(
-                              onEnter: (_) => setState(
-                                () => _isHoveringOnGeodataMenu = true,
-                              ),
-                              onExit: (_) => setState(
-                                () => _isHoveringOnGeodataMenu = false,
-                              ),
-                              child: ModernDropdownMenu<String>(
-                                items: const ['standard', 'memconservative'],
-                                selectedItem: _geodataLoader,
-                                onSelected: (value) {
-                                  setState(() => _geodataLoader = value);
-                                  clashProvider.configService.setGeodataLoader(
-                                    value,
-                                  );
-                                },
-                                itemToString: (val) =>
-                                    _getGeodataLoaderDisplayName(context, val),
-                                child: CustomDropdownButton(
-                                  text: _getGeodataLoaderDisplayName(
-                                    context,
-                                    _geodataLoader,
-                                  ),
-                                  isHovering: _isHoveringOnGeodataMenu,
                                 ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          MouseRegion(
+                            onEnter: (_) =>
+                                setState(() => _isHoveringOnGeodataMenu = true),
+                            onExit: (_) => setState(
+                              () => _isHoveringOnGeodataMenu = false,
+                            ),
+                            child: ModernDropdownMenu<String>(
+                              items: const ['standard', 'memconservative'],
+                              selectedItem: _geodataLoader,
+                              onSelected: (value) {
+                                setState(() => _geodataLoader = value);
+                                clashProvider.configService.setGeodataLoader(
+                                  value,
+                                );
+                              },
+                              itemToString: (val) =>
+                                  _getGeodataLoaderDisplayName(context, val),
+                              child: CustomDropdownButton(
+                                text: _getGeodataLoaderDisplayName(
+                                  context,
+                                  _geodataLoader,
+                                ),
+                                isHovering: _isHoveringOnGeodataMenu,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 16),
 
-                    // 查找进程模式
-                    ModernFeatureCard(
-                      isSelected: false,
-                      onTap: () {},
-                      enableHover: true,
-                      enableTap: false,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.search),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          context
-                                              .translate
-                                              .clashFeatures
-                                              .performance
-                                              .findProcess
-                                              .title,
-                                          style: theme.textTheme.titleMedium,
-                                        ),
-                                        Text(
-                                          context
-                                              .translate
-                                              .clashFeatures
-                                              .performance
-                                              .findProcess
-                                              .subtitle,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withAlpha(153),
-                                              ),
-                                        ),
-                                      ],
-                                    ),
+                  // 查找进程模式
+                  ModernFeatureCard(
+                    isSelected: false,
+                    onTap: () {},
+                    enableHover: true,
+                    enableTap: false,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 20,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                const Icon(Icons.search),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        context
+                                            .translate
+                                            .clashFeatures
+                                            .performance
+                                            .findProcess
+                                            .title,
+                                        style: theme.textTheme.titleMedium,
+                                      ),
+                                      Text(
+                                        context
+                                            .translate
+                                            .clashFeatures
+                                            .performance
+                                            .findProcess
+                                            .subtitle,
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme.colorScheme.onSurface
+                                                  .withAlpha(153),
+                                            ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            MouseRegion(
-                              onEnter: (_) => setState(
-                                () => _isHoveringOnProcessMenu = true,
-                              ),
-                              onExit: (_) => setState(
-                                () => _isHoveringOnProcessMenu = false,
-                              ),
-                              child: ModernDropdownMenu<String>(
-                                items: const ['off', 'strict', 'always'],
-                                selectedItem: _findProcessMode,
-                                onSelected: (value) {
-                                  setState(() => _findProcessMode = value);
-                                  clashProvider.configService
-                                      .setFindProcessMode(value);
-                                },
-                                itemToString: (val) =>
-                                    _getFindProcessModeDisplayName(
-                                      context,
-                                      val,
-                                    ),
-                                child: CustomDropdownButton(
-                                  text: _getFindProcessModeDisplayName(
-                                    context,
-                                    _findProcessMode,
-                                  ),
-                                  isHovering: _isHoveringOnProcessMenu,
                                 ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          MouseRegion(
+                            onEnter: (_) =>
+                                setState(() => _isHoveringOnProcessMenu = true),
+                            onExit: (_) => setState(
+                              () => _isHoveringOnProcessMenu = false,
+                            ),
+                            child: ModernDropdownMenu<String>(
+                              items: const ['off', 'strict', 'always'],
+                              selectedItem: _findProcessMode,
+                              onSelected: (value) {
+                                setState(() => _findProcessMode = value);
+                                clashProvider.configService.setFindProcessMode(
+                                  value,
+                                );
+                              },
+                              itemToString: (val) =>
+                                  _getFindProcessModeDisplayName(context, val),
+                              child: CustomDropdownButton(
+                                text: _getFindProcessModeDisplayName(
+                                  context,
+                                  _findProcessMode,
+                                ),
+                                isHovering: _isHoveringOnProcessMenu,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 16),
 
-                    // TCP 保持活动
-                    const KeepAliveCard(),
-                  ],
-                ),
+                  // TCP 保持活动
+                  const KeepAliveCard(),
+                ],
               ),
             ),
           ),

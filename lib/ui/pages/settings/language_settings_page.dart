@@ -55,17 +55,12 @@ class _LanguageSettingsPageState extends State<LanguageSettingsPage> {
         ),
         // 可滚动内容
         Expanded(
-          child: Scrollbar(
-            thumbVisibility: true,
-            controller: _scrollController,
-            child: Padding(
-              padding: SpacingConstants.scrollbarPadding,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                // 移除内部 padding
-                physics: const BouncingScrollPhysics(),
-                child: const LanguageSelector(),
-              ),
+          child: Padding(
+            padding: SpacingConstants.scrollbarPadding,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              child: const LanguageSelector(),
             ),
           ),
         ),

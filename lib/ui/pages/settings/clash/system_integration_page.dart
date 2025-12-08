@@ -58,29 +58,26 @@ class _SystemIntegrationPageState extends State<SystemIntegrationPage> {
         ),
         // 可滚动内容
         Expanded(
-          child: Scrollbar(
-            controller: _scrollController,
-            child: Padding(
-              padding: SpacingConstants.scrollbarPadding,
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  32,
-                  16,
-                  32 - SpacingConstants.scrollbarRightCompensation,
-                  16,
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SystemProxyCard(),
-                    SizedBox(height: 16),
-                    TunConfigCard(),
-                    SizedBox(height: 16),
-                    UwpLoopbackCard(),
-                  ],
-                ),
+          child: Padding(
+            padding: SpacingConstants.scrollbarPadding,
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(
+                32,
+                16,
+                32 - SpacingConstants.scrollbarRightCompensation,
+                16,
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SystemProxyCard(),
+                  SizedBox(height: 16),
+                  TunConfigCard(),
+                  SizedBox(height: 16),
+                  UwpLoopbackCard(),
+                ],
               ),
             ),
           ),

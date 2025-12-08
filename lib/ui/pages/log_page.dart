@@ -353,25 +353,22 @@ class _LogPageState extends State<LogPage> {
           );
         }
 
-        return Scrollbar(
+        return GridView.builder(
           controller: _scrollController,
-          child: GridView.builder(
-            controller: _scrollController,
-            padding: _LogListSpacing.listPadding,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 1, // 单列显示
-              mainAxisSpacing: _LogListSpacing.cardSpacing,
-              mainAxisExtent: _LogListSpacing.cardHeight,
-            ),
-            itemCount: filteredLogs.length,
-            addAutomaticKeepAlives: false, // 减少内存占用
-            addRepaintBoundaries: true, // 优化重绘性能
-            itemBuilder: (context, index) {
-              // 倒序显示日志（最新的在顶部）
-              final reversedIndex = filteredLogs.length - 1 - index;
-              return LogCard(log: filteredLogs[reversedIndex]);
-            },
+          padding: _LogListSpacing.listPadding,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 1, // 单列显示
+            mainAxisSpacing: _LogListSpacing.cardSpacing,
+            mainAxisExtent: _LogListSpacing.cardHeight,
           ),
+          itemCount: filteredLogs.length,
+          addAutomaticKeepAlives: false, // 减少内存占用
+          addRepaintBoundaries: true, // 优化重绘性能
+          itemBuilder: (context, index) {
+            // 倒序显示日志（最新的在顶部）
+            final reversedIndex = filteredLogs.length - 1 - index;
+            return LogCard(log: filteredLogs[reversedIndex]);
+          },
         );
       },
     );

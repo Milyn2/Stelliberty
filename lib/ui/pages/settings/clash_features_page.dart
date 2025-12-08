@@ -5,6 +5,7 @@ import 'package:stelliberty/providers/content_provider.dart';
 import 'package:stelliberty/i18n/i18n.dart';
 import 'package:stelliberty/utils/logger.dart';
 import 'package:stelliberty/ui/widgets/modern_tooltip.dart';
+import 'package:stelliberty/ui/constants/spacing.dart';
 
 class ClashFeaturesPage extends StatefulWidget {
   const ClashFeaturesPage({super.key});
@@ -54,159 +55,174 @@ class _ClashFeaturesPageState extends State<ClashFeaturesPage> {
           ),
           // 分类列表
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: [
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: SpacingConstants.scrollbarPadding,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    leading: const Icon(Icons.network_check),
+                    title: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .networkSettings
+                          .title,
+                    ),
+                    subtitle: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .networkSettings
+                          .subtitle,
+                    ),
+                    onTap: () => provider.switchView(
+                      ContentView.settingsClashNetworkSettings,
+                    ),
+                    splashColor: Colors.transparent,
                   ),
-                  leading: const Icon(Icons.network_check),
-                  title: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .networkSettings
-                        .title,
+                  ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    leading: const Icon(Icons.settings_ethernet),
+                    title: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .portControl
+                          .title,
+                    ),
+                    subtitle: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .portControl
+                          .subtitle,
+                    ),
+                    onTap: () => provider.switchView(
+                      ContentView.settingsClashPortControl,
+                    ),
+                    splashColor: Colors.transparent,
                   ),
-                  subtitle: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .networkSettings
-                        .subtitle,
+                  ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    leading: const Icon(Icons.integration_instructions),
+                    title: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .systemIntegration
+                          .title,
+                    ),
+                    subtitle: Text(
+                      Platform.isWindows
+                          ? context
+                                .translate
+                                .clashFeatures
+                                .navigation
+                                .systemIntegration
+                                .subtitleWindows
+                          : context
+                                .translate
+                                .clashFeatures
+                                .navigation
+                                .systemIntegration
+                                .subtitle,
+                    ),
+                    onTap: () => provider.switchView(
+                      ContentView.settingsClashSystemIntegration,
+                    ),
+                    splashColor: Colors.transparent,
                   ),
-                  onTap: () => provider.switchView(
-                    ContentView.settingsClashNetworkSettings,
+                  ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    leading: const Icon(Icons.dns),
+                    title: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .dnsConfig
+                          .title,
+                    ),
+                    subtitle: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .dnsConfig
+                          .subtitle,
+                    ),
+                    onTap: () =>
+                        provider.switchView(ContentView.settingsClashDnsConfig),
+                    splashColor: Colors.transparent,
                   ),
-                  splashColor: Colors.transparent,
-                ),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                  ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    leading: const Icon(Icons.speed),
+                    title: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .performance
+                          .title,
+                    ),
+                    subtitle: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .performance
+                          .subtitle,
+                    ),
+                    onTap: () => provider.switchView(
+                      ContentView.settingsClashPerformance,
+                    ),
+                    splashColor: Colors.transparent,
                   ),
-                  leading: const Icon(Icons.settings_ethernet),
-                  title: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .portControl
-                        .title,
+                  ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    leading: const Icon(Icons.bug_report),
+                    title: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .logsDebug
+                          .title,
+                    ),
+                    subtitle: Text(
+                      context
+                          .translate
+                          .clashFeatures
+                          .navigation
+                          .logsDebug
+                          .subtitle,
+                    ),
+                    onTap: () =>
+                        provider.switchView(ContentView.settingsClashLogsDebug),
+                    splashColor: Colors.transparent,
                   ),
-                  subtitle: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .portControl
-                        .subtitle,
-                  ),
-                  onTap: () =>
-                      provider.switchView(ContentView.settingsClashPortControl),
-                  splashColor: Colors.transparent,
-                ),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  leading: const Icon(Icons.integration_instructions),
-                  title: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .systemIntegration
-                        .title,
-                  ),
-                  subtitle: Text(
-                    Platform.isWindows
-                        ? context
-                              .translate
-                              .clashFeatures
-                              .navigation
-                              .systemIntegration
-                              .subtitleWindows
-                        : context
-                              .translate
-                              .clashFeatures
-                              .navigation
-                              .systemIntegration
-                              .subtitle,
-                  ),
-                  onTap: () => provider.switchView(
-                    ContentView.settingsClashSystemIntegration,
-                  ),
-                  splashColor: Colors.transparent,
-                ),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  leading: const Icon(Icons.dns),
-                  title: Text(
-                    context.translate.clashFeatures.navigation.dnsConfig.title,
-                  ),
-                  subtitle: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .dnsConfig
-                        .subtitle,
-                  ),
-                  onTap: () =>
-                      provider.switchView(ContentView.settingsClashDnsConfig),
-                  splashColor: Colors.transparent,
-                ),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  leading: const Icon(Icons.speed),
-                  title: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .performance
-                        .title,
-                  ),
-                  subtitle: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .performance
-                        .subtitle,
-                  ),
-                  onTap: () =>
-                      provider.switchView(ContentView.settingsClashPerformance),
-                  splashColor: Colors.transparent,
-                ),
-                ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  leading: const Icon(Icons.bug_report),
-                  title: Text(
-                    context.translate.clashFeatures.navigation.logsDebug.title,
-                  ),
-                  subtitle: Text(
-                    context
-                        .translate
-                        .clashFeatures
-                        .navigation
-                        .logsDebug
-                        .subtitle,
-                  ),
-                  onTap: () =>
-                      provider.switchView(ContentView.settingsClashLogsDebug),
-                  splashColor: Colors.transparent,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
