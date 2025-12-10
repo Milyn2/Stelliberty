@@ -40,11 +40,16 @@ class _ProxyGroupSelectorState extends State<ProxyGroupSelector> {
     milliseconds: 200,
   );
 
-  // 布局间距
-  static const double _outerPaddingTop = 4.0;
+  // 外层布局
+  static const double _outerPaddingTop = 12.0;
   static const double _outerPaddingBottom = 12.0;
-  static const double _groupSpacing = 24.0;
-  static const double _buttonSpacing = 12.0;
+  static const double _outerPaddingRight = 20.0; // 向右滚动按钮距右边缘
+  static const double _outerScrollButtonMargin = 10.0; // 末尾代理组距滚动按钮
+
+  // 代理组间距
+  static const double _startGroupSpacing = 20.0; // 左侧起始间距
+  static const double _groupSpacing = 20.0; // 代理组之间间距
+  static const double _endGroupSpacing = 0.0; // 末尾代理组距右间距
 
   // 标签样式
   static const double _tabHorizontalPadding = 8.0;
@@ -64,8 +69,13 @@ class _ProxyGroupSelectorState extends State<ProxyGroupSelector> {
   static const double _underlineWidth = 40.0;
   static const double _underlineBorderRadius = 1.0;
 
-  // 按钮样式
-  static const double _iconButtonSize = 20.0;
+  // 滚动按钮样式
+  static const double _scrollButtonSize = 20.0; // 图标尺寸
+  static const double _scrollButtonConstraint = 40.0; // 按钮约束尺寸
+  static const double _scrollButtonBorderRadius = 20.0; // 圆角半径
+  static const double _scrollButtonBackgroundAlpha = 0.3; // 常驻背景透明度
+  static const double _scrollButtonHoverAlpha = 0.5; // 悬停背景透明度
+  static const double _scrollButtonGap = 8.0; // 两个滚动按钮之间间距
 
   int? _hoveredIndex;
   bool _needsScrolling = false;
@@ -130,6 +140,7 @@ class _ProxyGroupSelectorState extends State<ProxyGroupSelector> {
       padding: const EdgeInsets.only(
         top: _outerPaddingTop,
         bottom: _outerPaddingBottom,
+        right: _outerPaddingRight,
       ),
       child: Row(
         children: [
@@ -163,15 +174,25 @@ class _ProxyGroupSelectorState extends State<ProxyGroupSelector> {
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   child: Row(
-                    children: List.generate(
-                      widget.clashProvider.proxyGroups.length,
-                      (index) {
+                    children: [
+                      // 左侧起始间距
+                      const SizedBox(width: _startGroupSpacing),
+                      ...List.generate(widget.clashProvider.proxyGroups.length, (
+                        index,
+                      ) {
                         final group = widget.clashProvider.proxyGroups[index];
                         final isSelected = index == widget.currentGroupIndex;
                         final isHovered = _hoveredIndex == index;
+                        final isLastGroup =
+                            index ==
+                            widget.clashProvider.proxyGroups.length - 1;
 
                         return Padding(
-                          padding: const EdgeInsets.only(right: _groupSpacing),
+                          padding: EdgeInsets.only(
+                            right: isLastGroup
+                                ? _endGroupSpacing
+                                : _groupSpacing,
+                          ),
                           child: MouseRegion(
                             onEnter: (_) =>
                                 setState(() => _hoveredIndex = index),
@@ -255,14 +276,14 @@ class _ProxyGroupSelectorState extends State<ProxyGroupSelector> {
                             ),
                           ),
                         );
-                      },
-                    ),
+                      }),
+                    ],
                   ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: _buttonSpacing),
+          const SizedBox(width: _outerScrollButtonMargin),
           _buildScrollButtons(context),
         ],
       ),
@@ -276,23 +297,76 @@ class _ProxyGroupSelectorState extends State<ProxyGroupSelector> {
         ModernTooltip(
           message: context.translate.proxy.scrollLeft,
           child: IconButton(
+            constraints: const BoxConstraints(
+              minWidth: _scrollButtonConstraint,
+              minHeight: _scrollButtonConstraint,
+              maxWidth: _scrollButtonConstraint,
+              maxHeight: _scrollButtonConstraint,
+            ),
+            padding: EdgeInsets.zero,
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) {
+                  return Colors.transparent;
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return Theme.of(context).colorScheme.surfaceContainerHighest
+                      .withValues(alpha: _scrollButtonHoverAlpha);
+                }
+                return Theme.of(context).colorScheme.surfaceContainerHighest
+                    .withValues(alpha: _scrollButtonBackgroundAlpha);
+              }),
+              shape: WidgetStateProperty.all(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    _scrollButtonBorderRadius,
+                  ),
+                ),
+              ),
+            ),
             onPressed: _canScrollLeft
                 ? () => _scrollByDistance(-widget.tabScrollDistance)
                 : null,
             icon: const Icon(Icons.chevron_left),
-            iconSize: _iconButtonSize,
-            visualDensity: VisualDensity.compact,
+            iconSize: _scrollButtonSize,
           ),
         ),
+        const SizedBox(width: _scrollButtonGap),
         ModernTooltip(
           message: context.translate.proxy.scrollRight,
           child: IconButton(
+            constraints: const BoxConstraints(
+              minWidth: _scrollButtonConstraint,
+              minHeight: _scrollButtonConstraint,
+              maxWidth: _scrollButtonConstraint,
+              maxHeight: _scrollButtonConstraint,
+            ),
+            padding: EdgeInsets.zero,
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.disabled)) {
+                  return Colors.transparent;
+                }
+                if (states.contains(WidgetState.hovered)) {
+                  return Theme.of(context).colorScheme.surfaceContainerHighest
+                      .withValues(alpha: _scrollButtonHoverAlpha);
+                }
+                return Theme.of(context).colorScheme.surfaceContainerHighest
+                    .withValues(alpha: _scrollButtonBackgroundAlpha);
+              }),
+              shape: WidgetStateProperty.all(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    _scrollButtonBorderRadius,
+                  ),
+                ),
+              ),
+            ),
             onPressed: _canScrollRight
                 ? () => _scrollByDistance(widget.tabScrollDistance)
                 : null,
             icon: const Icon(Icons.chevron_right),
-            iconSize: _iconButtonSize,
-            visualDensity: VisualDensity.compact,
+            iconSize: _scrollButtonSize,
           ),
         ),
       ],

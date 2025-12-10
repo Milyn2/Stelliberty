@@ -317,14 +317,7 @@ class _ProxyPageWidgetState extends State<ProxyPage>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: _buildGroupSelectorHeader(
-            context,
-            clashProvider,
-            selectedGroup,
-          ),
-        ),
+        _buildGroupSelectorHeader(context, clashProvider, selectedGroup),
         const Divider(height: 1),
         ListenableBuilder(
           listenable: _viewModel,
