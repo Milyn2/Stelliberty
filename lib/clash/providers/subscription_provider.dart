@@ -916,6 +916,38 @@ class SubscriptionProvider extends ChangeNotifier {
     }
   }
 
+  // 如果当前订阅使用了指定覆写，重载配置
+  // 用于在覆写内容更新时自动应用新配置
+  Future<void> _reloadSubscriptionIfOverrideUsed(String overrideId) async {
+    if (_currentSubscriptionId == null) {
+      Logger.debug('没有当前订阅，无需重载');
+      return;
+    }
+
+    final subscriptionIndex = _subscriptions.indexWhere(
+      (s) => s.id == _currentSubscriptionId,
+    );
+    if (subscriptionIndex == -1) {
+      Logger.error('当前订阅不存在 (ID: $_currentSubscriptionId)');
+      return;
+    }
+
+    final currentSubscription = _subscriptions[subscriptionIndex];
+
+    if (!currentSubscription.overrideIds.contains(overrideId)) {
+      Logger.debug('当前订阅未使用该覆写，无需重载');
+      return;
+    }
+
+    Logger.info('当前订阅使用了更新的覆写，重新加载配置');
+    _clashProvider?.pauseConfigWatcher();
+    try {
+      await _reloadCurrentSubscriptionConfig(reason: '覆写内容更新');
+    } finally {
+      await _clashProvider?.resumeConfigWatcher();
+    }
+  }
+
   // 修改订阅信息
   Future<bool> updateSubscriptionInfo({
     required String subscriptionId,
@@ -970,71 +1002,53 @@ class SubscriptionProvider extends ChangeNotifier {
   Future<bool> updateSubscriptionOverrides(
     String subscriptionId,
     List<String> overrideIds,
+    List<String> overrideSortPreference,
   ) async {
-    Logger.info('开始更新订阅覆写配置');
-    Logger.info('订阅 ID：$subscriptionId');
-    Logger.info('新覆写 ID 列表：$overrideIds');
-
-    final index = _subscriptions.indexWhere((s) => s.id == subscriptionId);
-
-    if (index == -1) {
+    final subscriptionIndex = _subscriptions.indexWhere(
+      (s) => s.id == subscriptionId,
+    );
+    if (subscriptionIndex == -1) {
       Logger.error('更新覆写配置失败：订阅不存在 (ID：$subscriptionId)');
       return false;
     }
 
     try {
-      final subscription = _subscriptions[index];
+      final subscription = _subscriptions[subscriptionIndex];
       final oldOverrideIds = subscription.overrideIds;
 
-      Logger.info('当前订阅名称：${subscription.name}');
-      Logger.info('旧覆写 ID 列表：$oldOverrideIds');
-
-      // 详细分析覆写变化
-      final added = overrideIds
+      final addedCount = overrideIds
           .where((id) => !oldOverrideIds.contains(id))
-          .toList();
-      final removed = oldOverrideIds
+          .length;
+      final removedCount = oldOverrideIds
           .where((id) => !overrideIds.contains(id))
-          .toList();
-      final unchanged = overrideIds
-          .where((id) => oldOverrideIds.contains(id))
-          .toList();
+          .length;
+      final hasOverrideChanges = addedCount > 0 || removedCount > 0;
 
-      if (added.isNotEmpty) {
-        Logger.info('新增覆写：$added');
-      }
-      if (removed.isNotEmpty) {
-        Logger.info('移除覆写：$removed');
-      }
-      if (unchanged.isNotEmpty) {
-        Logger.info('保持不变：$unchanged');
-      }
-      if (added.isEmpty && removed.isEmpty) {
-        Logger.info('覆写配置无变化');
-      }
+      Logger.info(
+        '更新订阅覆写 - ${subscription.name}: '
+        '旧=[${oldOverrideIds.join(", ")}], '
+        '新=[${overrideIds.join(", ")}], '
+        '${hasOverrideChanges ? "需要重载" : "仅排序"}',
+      );
 
-      // 更新订阅的覆写 ID 列表
-      _subscriptions[index] = subscription.copyWith(overrideIds: overrideIds);
+      _subscriptions[subscriptionIndex] = subscription.copyWith(
+        overrideIds: overrideIds,
+        overrideSortPreference: overrideSortPreference,
+      );
 
-      // 保存订阅列表（覆写配置持久化）
       await _service.saveSubscriptionList(_subscriptions);
       notifyListeners();
-      Logger.info('覆写配置已更新并保存：${_subscriptions[index].name}');
 
-      // 如果是当前选中的订阅，重新加载配置以应用新的覆写
-      if (subscriptionId == _currentSubscriptionId) {
-        Logger.info('当前订阅的覆写已更新，重新加载配置以应用覆写...');
+      if (hasOverrideChanges && subscriptionId == _currentSubscriptionId) {
+        Logger.info('当前订阅的覆写已更新，重新加载配置');
         _clashProvider?.pauseConfigWatcher();
         try {
           await _reloadCurrentSubscriptionConfig(reason: '覆写配置更新');
         } finally {
           await _clashProvider?.resumeConfigWatcher();
         }
-      } else {
-        Logger.info('覆写配置已更新，将在下次选择该订阅时生效');
       }
 
-      Logger.info('覆写配置更新完成');
       return true;
     } catch (e) {
       Logger.error('更新覆写配置失败 (ID：$subscriptionId) - $e');
@@ -1354,6 +1368,17 @@ class SubscriptionProvider extends ChangeNotifier {
     overrideProvider.setOnOverrideDeleted((overrideId) async {
       Logger.debug('覆写被删除，清理订阅引用：$overrideId');
       await removeOverrideFromAllSubscriptions(overrideId);
+    });
+
+    // 2.5 设置覆写内容更新回调（重载使用该覆写的当前订阅）
+    overrideProvider.setOnOverrideContentUpdated((overrideId) async {
+      try {
+        Logger.debug('覆写内容已更新：$overrideId');
+        await _reloadSubscriptionIfOverrideUsed(overrideId);
+      } catch (e) {
+        Logger.error('重载配置失败：$e');
+        // 不抛出异常，避免影响覆写文件保存操作
+      }
     });
 
     // 3. 清理无效的覆写引用（启动时一次性清理）

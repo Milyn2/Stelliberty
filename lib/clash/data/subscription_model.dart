@@ -129,7 +129,8 @@ class Subscription {
   final bool isLocalFile; // 是否为本地文件
   final SubscriptionProxyMode proxyMode; // 订阅更新代理模式
   final String? lastError; // 最后一次更新错误信息
-  final List<String> overrideIds; // 规则覆写ID列表
+  final List<String> overrideIds; // 规则覆写ID列表（已选中的）
+  final List<String> overrideSortPreference; // 规则覆写排序偏好（完整顺序，包括未选中的）
   final List<String> failedOverrideIds; // 失败的覆写ID列表(启动失败时记录)
   final String userAgent; // User-Agent（仅远程订阅有效，默认为 clash.meta）
 
@@ -147,6 +148,7 @@ class Subscription {
     this.proxyMode = SubscriptionProxyMode.direct,
     this.lastError,
     this.overrideIds = const [],
+    this.overrideSortPreference = const [],
     this.failedOverrideIds = const [],
     this.userAgent = ClashDefaults.defaultUserAgent,
   });
@@ -205,6 +207,7 @@ class Subscription {
     SubscriptionProxyMode? proxyMode,
     String? lastError,
     List<String>? overrideIds,
+    List<String>? overrideSortPreference,
     List<String>? failedOverrideIds,
     String? userAgent,
   }) {
@@ -222,6 +225,8 @@ class Subscription {
       proxyMode: proxyMode ?? this.proxyMode,
       lastError: lastError,
       overrideIds: overrideIds ?? this.overrideIds,
+      overrideSortPreference:
+          overrideSortPreference ?? this.overrideSortPreference,
       failedOverrideIds: failedOverrideIds ?? this.failedOverrideIds,
       userAgent: userAgent ?? this.userAgent,
     );
@@ -240,6 +245,7 @@ class Subscription {
     'proxyMode': proxyMode.value,
     'lastError': lastError,
     'overrideIds': overrideIds,
+    'overrideSortPreference': overrideSortPreference,
     'failedOverrideIds': failedOverrideIds,
     'userAgent': userAgent,
   };
@@ -267,6 +273,9 @@ class Subscription {
       lastError: json['lastError'] as String?,
       overrideIds: json['overrideIds'] != null
           ? List<String>.from(json['overrideIds'] as List)
+          : const [],
+      overrideSortPreference: json['overrideSortPreference'] != null
+          ? List<String>.from(json['overrideSortPreference'] as List)
           : const [],
       failedOverrideIds: json['failedOverrideIds'] != null
           ? List<String>.from(json['failedOverrideIds'] as List)

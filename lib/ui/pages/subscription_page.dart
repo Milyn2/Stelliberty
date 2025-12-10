@@ -550,21 +550,29 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       orElse: () => subscription, // 降级：如果找不到则使用传入的订阅
     );
 
-    Logger.debug('打开覆写选择对话框');
-    Logger.debug('订阅名称：${latestSubscription.name}');
-    Logger.debug('当前覆写 ID 列表：${latestSubscription.overrideIds}');
+    Logger.debug(
+      '打开覆写选择对话框 - 订阅: ${latestSubscription.name}, '
+      '已选: ${latestSubscription.overrideIds.length} 个',
+    );
 
     final result = await OverrideSelectorDialog.show(
       context,
       initialSelectedIds: latestSubscription.overrideIds,
+      initialSortPreference: latestSubscription.overrideSortPreference,
     );
-
-    Logger.debug('用户选择结果：$result');
 
     if (result == null || !context.mounted) return;
 
-    // 更新订阅的覆写 ID 列表
-    await provider.updateSubscriptionOverrides(subscription.id, result);
+    Logger.debug(
+      '覆写配置已修改 - 选中: ${result.selectedIds.length} 个，'
+      '排序: ${result.sortPreference.length} 个',
+    );
+
+    await provider.updateSubscriptionOverrides(
+      subscription.id,
+      result.selectedIds,
+      result.sortPreference,
+    );
   }
 
   // 显示提供者查看对话框

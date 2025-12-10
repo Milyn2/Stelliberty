@@ -21,10 +21,19 @@ class OverrideProvider extends ChangeNotifier {
   // 覆写删除回调（通知订阅系统清理引用）
   Future<void> Function(String overrideId)? _onOverrideDeleted;
 
+  // 覆写内容更新回调（通知订阅系统重载配置）
+  Future<void> Function(String overrideId)? _onOverrideContentUpdated;
+
   // 设置覆写删除回调
   void setOnOverrideDeleted(Future<void> Function(String) callback) {
     _onOverrideDeleted = callback;
     Logger.debug('已设置覆写删除回调');
+  }
+
+  // 设置覆写内容更新回调
+  void setOnOverrideContentUpdated(Future<void> Function(String) callback) {
+    _onOverrideContentUpdated = callback;
+    Logger.debug('已设置覆写内容更新回调');
   }
 
   // 状态委托给状态管理器
@@ -433,6 +442,12 @@ class OverrideProvider extends ChangeNotifier {
       Logger.info('保存覆写文件内容：${override.name}');
       await _service.saveOverrideContent(override, content);
       Logger.info('覆写文件内容保存成功');
+
+      // 通知订阅系统：如果当前订阅使用了这个覆写，需要重载配置
+      if (_onOverrideContentUpdated != null) {
+        Logger.debug('触发覆写内容更新回调：${override.id}');
+        await _onOverrideContentUpdated!(override.id);
+      }
     } catch (e) {
       Logger.error('保存覆写文件内容失败：${override.name} - $e');
       rethrow;
