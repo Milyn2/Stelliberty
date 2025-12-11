@@ -204,37 +204,34 @@ class _NetworkSettingsPageState extends State<NetworkSettingsPage> {
       onTap: () {},
       enableHover: true,
       enableTap: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // 左侧图标和标题
-            Row(
-              children: [
-                Icon(icon),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: Theme.of(context).textTheme.titleMedium),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withAlpha(153),
-                      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 左侧图标和标题
+          Row(
+            children: [
+              Icon(icon),
+              const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withAlpha(153),
                     ),
-                  ],
-                ),
-              ],
-            ),
-            // 右侧开关
-            ModernSwitch(value: value, onChanged: onChanged),
-          ],
-        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // 右侧开关
+          ModernSwitch(value: value, onChanged: onChanged),
+        ],
       ),
     );
   }

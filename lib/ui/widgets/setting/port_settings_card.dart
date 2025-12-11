@@ -185,82 +185,79 @@ class _PortSettingsCardState extends State<PortSettingsCard> {
       onTap: () {},
       enableHover: false,
       enableTap: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题区域
-            Row(
-              children: [
-                const Icon(Icons.settings_ethernet_outlined),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.translate.clashFeatures.portSettings.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      context.translate.clashFeatures.portSettings.subtitle,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // 端口输入区域
-            ModernTextField(
-              controller: _mixedPortController,
-              keyboardType: TextInputType.number,
-              labelText: context.translate.clashFeatures.portSettings.mixedPort,
-              hintText: ClashDefaults.mixedPort.toString(),
-              errorText: _mixedPortError,
-            ),
-            const SizedBox(height: 12),
-            ModernTextField(
-              controller: _socksPortController,
-              keyboardType: TextInputType.number,
-              labelText: context.translate.clashFeatures.portSettings.socksPort,
-              hintText:
-                  context.translate.clashFeatures.portSettings.emptyToDisable,
-              errorText: _socksPortError,
-            ),
-            const SizedBox(height: 12),
-            ModernTextField(
-              controller: _httpPortController,
-              keyboardType: TextInputType.number,
-              labelText: context.translate.clashFeatures.portSettings.httpPort,
-              hintText:
-                  context.translate.clashFeatures.portSettings.emptyToDisable,
-              errorText: _httpPortError,
-            ),
-            const SizedBox(height: 16),
-            // 保存按钮
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FilledButton.icon(
-                  onPressed: _isSaving ? null : _saveConfig,
-                  icon: _isSaving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save, size: 18),
-                  label: Text(
-                    _isSaving
-                        ? context.translate.portSettings.saving
-                        : context.translate.common.save,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 标题区域
+          Row(
+            children: [
+              const Icon(Icons.settings_ethernet_outlined),
+              const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.translate.clashFeatures.portSettings.title,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
+                  Text(
+                    context.translate.clashFeatures.portSettings.subtitle,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // 端口输入区域
+          ModernTextField(
+            controller: _mixedPortController,
+            keyboardType: TextInputType.number,
+            labelText: context.translate.clashFeatures.portSettings.mixedPort,
+            hintText: ClashDefaults.mixedPort.toString(),
+            errorText: _mixedPortError,
+          ),
+          const SizedBox(height: 12),
+          ModernTextField(
+            controller: _socksPortController,
+            keyboardType: TextInputType.number,
+            labelText: context.translate.clashFeatures.portSettings.socksPort,
+            hintText:
+                context.translate.clashFeatures.portSettings.emptyToDisable,
+            errorText: _socksPortError,
+          ),
+          const SizedBox(height: 12),
+          ModernTextField(
+            controller: _httpPortController,
+            keyboardType: TextInputType.number,
+            labelText: context.translate.clashFeatures.portSettings.httpPort,
+            hintText:
+                context.translate.clashFeatures.portSettings.emptyToDisable,
+            errorText: _httpPortError,
+          ),
+          const SizedBox(height: 16),
+          // 保存按钮
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FilledButton.icon(
+                onPressed: _isSaving ? null : _saveConfig,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save, size: 18),
+                label: Text(
+                  _isSaving
+                      ? context.translate.portSettings.saving
+                      : context.translate.common.save,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -95,40 +95,37 @@ class _LanguageSelectorState extends State<LanguageSelector> {
         onTap: () {},
         enableHover: false,
         enableTap: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.language_outlined),
-                  const SizedBox(width: 12),
-                  Text(
-                    context.translate.language.settings,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ],
-              ),
-              MouseRegion(
-                onEnter: (_) =>
-                    setState(() => _isHoveringOnLanguageMenu = true),
-                onExit: (_) =>
-                    setState(() => _isHoveringOnLanguageMenu = false),
-                child: ModernDropdownMenu<AppLanguageMode>(
-                  items: AppLanguageMode.values,
-                  selectedItem: _currentLanguage,
-                  onSelected: _changeLanguage,
-                  itemToString: (mode) => mode.displayName(context),
-                  child: CustomDropdownButton(
-                    text: _currentLanguage.displayName(context),
-                    isHovering: _isHoveringOnLanguageMenu,
-                  ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.language_outlined),
+                const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
+                Text(
+                  context.translate.language.settings,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+            MouseRegion(
+              onEnter: (_) =>
+                  setState(() => _isHoveringOnLanguageMenu = true),
+              onExit: (_) =>
+                  setState(() => _isHoveringOnLanguageMenu = false),
+              child: ModernDropdownMenu<AppLanguageMode>(
+                items: AppLanguageMode.values,
+                selectedItem: _currentLanguage,
+                onSelected: _changeLanguage,
+                itemToString: (mode) => mode.displayName(context),
+                child: CustomDropdownButton(
+                  text: _currentLanguage.displayName(context),
+                  isHovering: _isHoveringOnLanguageMenu,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

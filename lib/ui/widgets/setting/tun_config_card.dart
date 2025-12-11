@@ -255,43 +255,40 @@ class _TunConfigCardState extends State<TunConfigCard> {
       onTap: () {},
       enableHover: false,
       enableTap: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题行
-            Row(
-              children: [
-                const Icon(Icons.vpn_lock),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.translate.clashFeatures.tunMode.title,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    Text(
-                      context.translate.clashFeatures.tunMode.subtitle,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 标题行
+          Row(
+            children: [
+              const Icon(Icons.vpn_lock),
+              const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.translate.clashFeatures.tunMode.title,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Text(
+                    context.translate.clashFeatures.tunMode.subtitle,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 16),
-            const Divider(height: 1),
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
 
-            // 加载中显示骨架屏
-            if (_isLoading)
-              _buildSkeleton(theme)
-            else
-              ..._buildRealContent(context, theme),
-          ],
-        ),
+          // 加载中显示骨架屏
+          if (_isLoading)
+            _buildSkeleton(theme)
+          else
+            ..._buildRealContent(context, theme),
+        ],
       ),
     );
   }

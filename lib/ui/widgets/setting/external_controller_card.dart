@@ -131,154 +131,139 @@ class _ExternalControllerCardState extends State<ExternalControllerCard> {
       onTap: () {},
       enableHover: false,
       enableTap: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.settings_remote_rounded),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.translate.externalController.title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        Text(
-                          context.translate.externalController.description,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                ModernSwitch(
-                  value: _isEnabled,
-                  onChanged: (value) async {
-                    setState(() => _isEnabled = value);
-                    final clashProvider = Provider.of<ClashProvider>(
-                      context,
-                      listen: false,
-                    );
-                    await ClashPreferences.instance
-                        .setExternalControllerEnabled(value);
-                    if (!mounted) return;
-                    clashProvider.configService.setExternalController(
-                      _isEnabled,
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Divider(height: 1),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _addressController,
-                    enabled: !_isSaving,
-                    decoration: InputDecoration(
-                      labelText:
-                          context.translate.externalController.addressLabel,
-                      hintText:
-                          context.translate.externalController.addressHint,
-                      errorText: _addressError,
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.link_rounded, size: 20),
-                      suffixIcon: ModernTooltip(
-                        message:
-                            context.translate.externalController.copyAddress,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.content_copy_rounded,
-                            size: 20,
-                          ),
-                          onPressed: _isSaving
-                              ? null
-                              : () => _copyToClipboard(
-                                  _addressController.text,
-                                  context
-                                      .translate
-                                      .externalController
-                                      .copyAddress,
-                                ),
-                        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.settings_remote_rounded),
+                  const SizedBox(
+                    width: ModernFeatureCardSpacing.featureIconToTextSpacing,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.translate.externalController.title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        context.translate.externalController.description,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              ModernSwitch(
+                value: _isEnabled,
+                onChanged: (value) async {
+                  setState(() => _isEnabled = value);
+                  final clashProvider = Provider.of<ClashProvider>(
+                    context,
+                    listen: false,
+                  );
+                  await ClashPreferences.instance.setExternalControllerEnabled(
+                    value,
+                  );
+                  if (!mounted) return;
+                  clashProvider.configService.setExternalController(_isEnabled);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _addressController,
+                  enabled: !_isSaving,
+                  decoration: InputDecoration(
+                    labelText:
+                        context.translate.externalController.addressLabel,
+                    hintText: context.translate.externalController.addressHint,
+                    errorText: _addressError,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.link_rounded, size: 20),
+                    suffixIcon: ModernTooltip(
+                      message: context.translate.externalController.copyAddress,
+                      child: IconButton(
+                        icon: const Icon(Icons.content_copy_rounded, size: 20),
+                        onPressed: _isSaving
+                            ? null
+                            : () => _copyToClipboard(
+                                _addressController.text,
+                                context
+                                    .translate
+                                    .externalController
+                                    .copyAddress,
+                              ),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _secretController,
-                    enabled: !_isSaving,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText:
-                          context.translate.externalController.secretLabel,
-                      hintText: context.translate.externalController.secretHint,
-                      errorText: _secretError,
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.vpn_key_rounded, size: 20),
-                      suffixIcon: ModernTooltip(
-                        message:
-                            context.translate.externalController.copySecret,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.content_copy_rounded,
-                            size: 20,
-                          ),
-                          onPressed: _isSaving
-                              ? null
-                              : () => _copyToClipboard(
-                                  _secretController.text,
-                                  context
-                                      .translate
-                                      .externalController
-                                      .copySecret,
-                                ),
-                        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _secretController,
+                  enabled: !_isSaving,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: context.translate.externalController.secretLabel,
+                    hintText: context.translate.externalController.secretHint,
+                    errorText: _secretError,
+                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.vpn_key_rounded, size: 20),
+                    suffixIcon: ModernTooltip(
+                      message: context.translate.externalController.copySecret,
+                      child: IconButton(
+                        icon: const Icon(Icons.content_copy_rounded, size: 20),
+                        onPressed: _isSaving
+                            ? null
+                            : () => _copyToClipboard(
+                                _secretController.text,
+                                context.translate.externalController.copySecret,
+                              ),
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FilledButton.icon(
-                  onPressed: _isSaving ? null : _saveConfig,
-                  icon: _isSaving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save, size: 18),
-                  label: Text(
-                    _isSaving
-                        ? context.translate.externalController.saving
-                        : context.translate.common.save,
-                  ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FilledButton.icon(
+                onPressed: _isSaving ? null : _saveConfig,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save, size: 18),
+                label: Text(
+                  _isSaving
+                      ? context.translate.externalController.saving
+                      : context.translate.common.save,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

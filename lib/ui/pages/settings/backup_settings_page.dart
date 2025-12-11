@@ -75,13 +75,6 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                     icon: Icons.backup_outlined,
                     title: context.translate.backup.createBackup,
                     subtitle: context.translate.backup.description,
-                    trailing: _isCreating
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : null,
                     enableHover: !_isCreating,
                     enableTap: !_isCreating,
                     onTap: _isCreating ? null : _createBackup,
@@ -92,13 +85,6 @@ class _BackupSettingsPageState extends State<BackupSettingsPage> {
                     icon: Icons.restore_outlined,
                     title: context.translate.backup.restoreBackup,
                     subtitle: context.translate.backup.description,
-                    trailing: _isRestoring
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : null,
                     enableHover: !_isRestoring,
                     enableTap: !_isRestoring,
                     onTap: _isRestoring ? null : _restoreBackup,

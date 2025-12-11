@@ -54,50 +54,47 @@ class _LazyModeCardState extends State<LazyModeCard> {
       onTap: () {}, // 禁用整个卡片的点击
       enableHover: true,
       enableTap: false, // 禁用点击交互，只允许开关本身触发
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // 左侧图标和标题
-            Row(
-              children: [
-                const Icon(Icons.bedtime_rounded),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context
-                          .translate
-                          .clashFeatures
-                          .systemIntegration
-                          .lazyMode
-                          .title,
-                      style: Theme.of(context).textTheme.titleMedium,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 左侧图标和标题
+          Row(
+            children: [
+              const Icon(Icons.bedtime_rounded),
+              const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context
+                        .translate
+                        .clashFeatures
+                        .systemIntegration
+                        .lazyMode
+                        .title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Text(
+                    context
+                        .translate
+                        .clashFeatures
+                        .systemIntegration
+                        .lazyMode
+                        .subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withAlpha(153),
                     ),
-                    Text(
-                      context
-                          .translate
-                          .clashFeatures
-                          .systemIntegration
-                          .lazyMode
-                          .subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withAlpha(153),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            // 右侧开关
-            ModernSwitch(value: _lazyMode, onChanged: _toggleLazyMode),
-          ],
-        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // 右侧开关
+          ModernSwitch(value: _lazyMode, onChanged: _toggleLazyMode),
+        ],
       ),
     );
   }

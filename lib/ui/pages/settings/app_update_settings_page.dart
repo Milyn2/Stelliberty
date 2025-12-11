@@ -171,71 +171,30 @@ class _AppUpdateSettingsPageState extends State<AppUpdateSettingsPage> {
       builder: (context, updateProvider, child) {
         final isChecking = updateProvider.isChecking;
 
-        return ModernFeatureCard(
-          isSelected: false,
-          onTap: () {}, // 禁用整个卡片的点击
-          enableHover: true,
-          enableTap: false, // 禁用点击交互，只允许开关本身触发
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // 左侧：图标和标题
-                Row(
-                  children: [
-                    const Icon(Icons.new_releases_outlined),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.translate.appUpdate.autoUpdateTitle,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        Text(
-                          context.translate.appUpdate.autoUpdateDescription,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withAlpha(153),
-                              ),
-                        ),
-                      ],
+        return ModernFeatureLayoutCard(
+          icon: Icons.new_releases_outlined,
+          title: context.translate.appUpdate.autoUpdateTitle,
+          subtitle: context.translate.appUpdate.autoUpdateDescription,
+          trailingLeadingButton: IconButton(
+            icon: isChecking
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                  ],
-                ),
-                // 右侧：检查更新按钮 + 开关
-                Row(
-                  children: [
-                    // 检查更新按钮
-                    IconButton(
-                      icon: isChecking
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            )
-                          : const Icon(Icons.refresh, size: 20),
-                      tooltip: context.translate.appUpdate.checkNow,
-                      onPressed: isChecking ? null : _checkForUpdate,
-                    ),
-                    const SizedBox(width: 8),
-                    // 开关
-                    ModernSwitch(
-                      value: _autoUpdate,
-                      onChanged: _saveAutoUpdate,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  )
+                : const Icon(Icons.refresh, size: 20),
+            tooltip: context.translate.appUpdate.checkNow,
+            onPressed: isChecking ? null : _checkForUpdate,
           ),
+          trailing: ModernSwitch(
+            value: _autoUpdate,
+            onChanged: _saveAutoUpdate,
+          ),
+          enableHover: true,
+          enableTap: false,
         );
       },
     );
@@ -243,46 +202,13 @@ class _AppUpdateSettingsPageState extends State<AppUpdateSettingsPage> {
 
   // 构建更新间隔选择卡片（使用自定义下拉菜单）
   Widget _buildIntervalCard() {
-    return ModernFeatureCard(
-      isSelected: false,
-      onTap: () {},
+    return ModernFeatureLayoutCard(
+      icon: Icons.schedule_outlined,
+      title: context.translate.appUpdate.checkIntervalTitle,
+      subtitle: context.translate.appUpdate.checkIntervalDescription,
+      trailing: _buildIntervalDropdown(),
       enableHover: true,
       enableTap: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // 左侧图标和标题
-            Row(
-              children: [
-                const Icon(Icons.schedule_outlined),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.translate.appUpdate.checkIntervalTitle,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      context.translate.appUpdate.checkIntervalDescription,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withAlpha(153),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            // 右侧自定义下拉菜单
-            _buildIntervalDropdown(),
-          ],
-        ),
-      ),
     );
   }
 

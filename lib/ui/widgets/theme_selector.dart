@@ -68,43 +68,37 @@ class _ThemeSelectorState extends State<ThemeSelector> {
                 onTap: () {},
                 enableHover: false,
                 enableTap: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 20,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.palette_outlined),
-                          const SizedBox(width: 12),
-                          Text(
-                            context.translate.theme.title,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ],
-                      ),
-                      MouseRegion(
-                        onEnter: (_) =>
-                            setState(() => _isHoveringOnThemeModeMenu = true),
-                        onExit: (_) =>
-                            setState(() => _isHoveringOnThemeModeMenu = false),
-                        child: ModernDropdownMenu<AppThemeMode>(
-                          items: AppThemeMode.values,
-                          selectedItem: themeProvider.themeMode,
-                          onSelected: themeProvider.setThemeMode,
-                          itemToString: (mode) => mode.displayName,
-                          child: CustomDropdownButton(
-                            text: themeProvider.themeMode.displayName,
-                            isHovering: _isHoveringOnThemeModeMenu,
-                          ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.palette_outlined),
+                        const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
+                        Text(
+                          context.translate.theme.title,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
+                    MouseRegion(
+                      onEnter: (_) =>
+                          setState(() => _isHoveringOnThemeModeMenu = true),
+                      onExit: (_) =>
+                          setState(() => _isHoveringOnThemeModeMenu = false),
+                      child: ModernDropdownMenu<AppThemeMode>(
+                        items: AppThemeMode.values,
+                        selectedItem: themeProvider.themeMode,
+                        onSelected: themeProvider.setThemeMode,
+                        itemToString: (mode) => mode.displayName,
+                        child: CustomDropdownButton(
+                          text: themeProvider.themeMode.displayName,
+                          isHovering: _isHoveringOnThemeModeMenu,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -125,44 +119,64 @@ class _ThemeSelectorState extends State<ThemeSelector> {
                       onTap: () {},
                       enableHover: false,
                       enableTap: false,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 20,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.blur_on_outlined),
-                                const SizedBox(width: 12),
-                                Text(
-                                  context.translate.theme.effect,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                              ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.blur_on_outlined),
+                              const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
+                              Text(
+                                context.translate.theme.effect,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.titleMedium,
+                              ),
+                            ],
+                          ),
+                          MouseRegion(
+                            onEnter: (_) => setState(
+                              () => _isHoveringOnEffectMenu = true,
                             ),
-                            MouseRegion(
-                              onEnter: (_) => setState(
-                                () => _isHoveringOnEffectMenu = true,
-                              ),
-                              onExit: (_) => setState(
-                                () => _isHoveringOnEffectMenu = false,
-                              ),
-                              child: ModernDropdownMenu<AppWindowEffect>(
-                                items: AppWindowEffect.values,
-                                selectedItem: windowEffectProvider.windowEffect,
-                                onSelected: (effect) {
-                                  windowEffectProvider.setWindowEffect(effect);
-                                },
-                                itemToString: (effect) {
+                            onExit: (_) => setState(
+                              () => _isHoveringOnEffectMenu = false,
+                            ),
+                            child: ModernDropdownMenu<AppWindowEffect>(
+                              items: AppWindowEffect.values,
+                              selectedItem: windowEffectProvider.windowEffect,
+                              onSelected: (effect) {
+                                windowEffectProvider.setWindowEffect(effect);
+                              },
+                              itemToString: (effect) {
+                                switch (effect) {
+                                  case AppWindowEffect.mica:
+                                    return context.translate.theme.effectMica;
+                                  case AppWindowEffect.acrylic:
+                                    return context
+                                        .translate
+                                        .theme
+                                        .effectAcrylic;
+                                  case AppWindowEffect.tabbed:
+                                    return context
+                                        .translate
+                                        .theme
+                                        .effectTabbed;
+                                  default:
+                                    return context
+                                        .translate
+                                        .theme
+                                        .effectDefault;
+                                }
+                              },
+                              child: CustomDropdownButton(
+                                text: (effect) {
                                   switch (effect) {
                                     case AppWindowEffect.mica:
-                                      return context.translate.theme.effectMica;
+                                      return context
+                                          .translate
+                                          .theme
+                                          .effectMica;
                                     case AppWindowEffect.acrylic:
                                       return context
                                           .translate
@@ -179,38 +193,12 @@ class _ThemeSelectorState extends State<ThemeSelector> {
                                           .theme
                                           .effectDefault;
                                   }
-                                },
-                                child: CustomDropdownButton(
-                                  text: (effect) {
-                                    switch (effect) {
-                                      case AppWindowEffect.mica:
-                                        return context
-                                            .translate
-                                            .theme
-                                            .effectMica;
-                                      case AppWindowEffect.acrylic:
-                                        return context
-                                            .translate
-                                            .theme
-                                            .effectAcrylic;
-                                      case AppWindowEffect.tabbed:
-                                        return context
-                                            .translate
-                                            .theme
-                                            .effectTabbed;
-                                      default:
-                                        return context
-                                            .translate
-                                            .theme
-                                            .effectDefault;
-                                    }
-                                  }(windowEffectProvider.windowEffect),
-                                  isHovering: _isHoveringOnEffectMenu,
-                                ),
+                                }(windowEffectProvider.windowEffect),
+                                isHovering: _isHoveringOnEffectMenu,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -309,6 +297,7 @@ class _ThemeSelectorState extends State<ThemeSelector> {
       onTap: () {
         themeProvider.setColorIndex(index);
       },
+      padding: EdgeInsets.zero,
       child: Container(
         width: 60,
         height: 60,

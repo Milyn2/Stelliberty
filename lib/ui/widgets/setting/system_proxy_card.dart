@@ -88,39 +88,38 @@ class _SystemProxyCardState extends State<SystemProxyCard> {
           onTap: () {},
           enableHover: false,
           enableTap: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 标题行
-                Row(
-                  children: [
-                    const Icon(Icons.settings_ethernet_rounded),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.translate.systemProxy.configTitle,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 标题行
+              Row(
+                children: [
+                  const Icon(Icons.settings_ethernet_rounded),
+                  const SizedBox(
+                    width: ModernFeatureCardSpacing.featureIconToTextSpacing,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.translate.systemProxy.configTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
 
-                const SizedBox(height: 16),
-                const Divider(height: 1),
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
 
-                // 骨架屏或真实内容
-                if (_viewModel.isLoading)
-                  _buildSkeleton(theme)
-                else
-                  ..._buildRealContent(theme),
-              ],
-            ),
+              // 骨架屏或真实内容
+              if (_viewModel.isLoading)
+                _buildSkeleton(theme)
+              else
+                ..._buildRealContent(theme),
+            ],
           ),
         );
       },

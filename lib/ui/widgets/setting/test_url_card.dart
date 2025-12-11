@@ -77,78 +77,74 @@ class _TestUrlCardState extends State<TestUrlCard> {
       onTap: () {},
       enableHover: false,
       enableTap: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题区域
-            Row(
-              children: [
-                const Icon(Icons.speed_outlined),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.translate.clashFeatures.testUrl.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      context.translate.clashFeatures.testUrl.subtitle,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // URL 输入区域
-            ModernTextField(
-              controller: _testUrlController,
-              keyboardType: TextInputType.url,
-              labelText: context.translate.clashFeatures.testUrl.label,
-              hintText: ClashDefaults.defaultTestUrl,
-              suffixIcon: Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: ModernTooltip(
-                  message:
-                      context.translate.clashFeatures.testUrl.restoreDefault,
-                  child: IconButton(
-                    icon: const Icon(Icons.restore),
-                    onPressed: () {
-                      setState(() {
-                        _testUrlController.text = ClashDefaults.defaultTestUrl;
-                      });
-                    },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 标题区域
+          Row(
+            children: [
+              const Icon(Icons.speed_outlined),
+              const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.translate.clashFeatures.testUrl.title,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
+                  Text(
+                    context.translate.clashFeatures.testUrl.subtitle,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // URL 输入区域
+          ModernTextField(
+            controller: _testUrlController,
+            keyboardType: TextInputType.url,
+            labelText: context.translate.clashFeatures.testUrl.label,
+            hintText: ClashDefaults.defaultTestUrl,
+            suffixIcon: Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: ModernTooltip(
+                message: context.translate.clashFeatures.testUrl.restoreDefault,
+                child: IconButton(
+                  icon: const Icon(Icons.restore),
+                  onPressed: () {
+                    setState(() {
+                      _testUrlController.text = ClashDefaults.defaultTestUrl;
+                    });
+                  },
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            // 保存按钮
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FilledButton.icon(
-                  onPressed: _isSaving ? null : _saveConfig,
-                  icon: _isSaving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save, size: 18),
-                  label: Text(
-                    _isSaving
-                        ? context.translate.clashFeatures.testUrl.saving
-                        : context.translate.common.save,
-                  ),
+          ),
+          const SizedBox(height: 16),
+          // 保存按钮
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FilledButton.icon(
+                onPressed: _isSaving ? null : _saveConfig,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save, size: 18),
+                label: Text(
+                  _isSaving
+                      ? context.translate.clashFeatures.testUrl.saving
+                      : context.translate.common.save,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

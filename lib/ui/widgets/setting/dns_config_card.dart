@@ -391,82 +391,81 @@ class _DnsConfigCardState extends State<DnsConfigCard> {
       onTap: () {},
       enableHover: false,
       enableTap: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题行（包含 DNS 开关）
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.dns_outlined),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.translate.dnsSettings.title,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        Text(
-                          context.translate.dnsSettings.description,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                // DNS 开关直接显示在标题行
-                ModernSwitch(
-                  value: _enableDns,
-                  onChanged: (value) {
-                    setState(() => _enableDns = value);
-                    _saveConfig();
-                  },
-                ),
-              ],
-            ),
-
-            // 配置内容（固定展开）
-            const SizedBox(height: 16),
-            const Divider(height: 1),
-            const SizedBox(height: 16),
-
-            // 如果正在加载，显示骨架屏
-            if (_isLoading)
-              _buildSkeleton(Theme.of(context))
-            else
-              ..._buildConfigContent(),
-
-            const SizedBox(height: 16),
-            const Divider(height: 1),
-            const SizedBox(height: 16),
-
-            // 操作按钮
-            Row(
-              children: [
-                TextButton.icon(
-                  icon: const Icon(Icons.restart_alt, size: 18),
-                  label: Text(context.translate.dnsSettings.reset),
-                  onPressed: _resetToDefault,
-                ),
-                const Spacer(),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.save, size: 18),
-                  label: Text(context.translate.dnsSettings.save),
-                  onPressed: _saveConfig,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 标题行（包含 DNS 开关）
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.dns_outlined),
+                  const SizedBox(
+                    width: ModernFeatureCardSpacing.featureIconToTextSpacing,
                   ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.translate.dnsSettings.title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        context.translate.dnsSettings.description,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              // DNS 开关直接显示在标题行
+              ModernSwitch(
+                value: _enableDns,
+                onChanged: (value) {
+                  setState(() => _enableDns = value);
+                  _saveConfig();
+                },
+              ),
+            ],
+          ),
+
+          // 配置内容（固定展开）
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+
+          // 如果正在加载，显示骨架屏
+          if (_isLoading)
+            _buildSkeleton(Theme.of(context))
+          else
+            ..._buildConfigContent(),
+
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+
+          // 操作按钮
+          Row(
+            children: [
+              TextButton.icon(
+                icon: const Icon(Icons.restart_alt, size: 18),
+                label: Text(context.translate.dnsSettings.reset),
+                onPressed: _resetToDefault,
+              ),
+              const Spacer(),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.save, size: 18),
+                label: Text(context.translate.dnsSettings.save),
+                onPressed: _saveConfig,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -816,7 +815,7 @@ class _DnsConfigCardState extends State<DnsConfigCard> {
         Row(
           children: [
             const Icon(Icons.check_circle_outline, size: 20),
-            const SizedBox(width: 12),
+            const SizedBox(width: ModernFeatureCardSpacing.featureIconToTextSpacing),
             Text(label, style: Theme.of(context).textTheme.titleSmall),
           ],
         ),

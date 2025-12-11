@@ -70,56 +70,53 @@ class _LogLevelCardState extends State<LogLevelCard> {
       onTap: () {},
       enableHover: false,
       enableTap: false,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // 左侧图标和标题
-            Row(
-              children: [
-                const Icon(Icons.article_outlined),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.translate.clashFeatures.logLevel.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    Text(
-                      context.translate.clashFeatures.logLevel.subtitle,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            // 右侧下拉菜单
-            MouseRegion(
-              onEnter: (_) => setState(() => _isHoveringOnLogLevelMenu = true),
-              onExit: (_) => setState(() => _isHoveringOnLogLevelMenu = false),
-              child: ModernDropdownMenu<LogLevel>(
-                items: LogLevel.values,
-                selectedItem: _logLevel,
-                onSelected: (level) {
-                  setState(() => _logLevel = level);
-                  final clashProvider = Provider.of<ClashProvider>(
-                    context,
-                    listen: false,
-                  );
-                  clashProvider.configService.setClashCoreLogLevel(level.value);
-                },
-                itemToString: (level) => level.getDisplayName(context),
-                child: CustomDropdownButton(
-                  text: _logLevel.getDisplayName(context),
-                  isHovering: _isHoveringOnLogLevelMenu,
-                ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 左侧图标和标题
+          Row(
+            children: [
+              const Icon(Icons.article_outlined),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.translate.clashFeatures.logLevel.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Text(
+                    context.translate.clashFeatures.logLevel.subtitle,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // 右侧下拉菜单
+          MouseRegion(
+            onEnter: (_) => setState(() => _isHoveringOnLogLevelMenu = true),
+            onExit: (_) => setState(() => _isHoveringOnLogLevelMenu = false),
+            child: ModernDropdownMenu<LogLevel>(
+              items: LogLevel.values,
+              selectedItem: _logLevel,
+              onSelected: (level) {
+                setState(() => _logLevel = level);
+                final clashProvider = Provider.of<ClashProvider>(
+                  context,
+                  listen: false,
+                );
+                clashProvider.configService.setClashCoreLogLevel(level.value);
+              },
+              itemToString: (level) => level.getDisplayName(context),
+              child: CustomDropdownButton(
+                text: _logLevel.getDisplayName(context),
+                isHovering: _isHoveringOnLogLevelMenu,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
