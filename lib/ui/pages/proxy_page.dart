@@ -63,6 +63,7 @@ class _ProxyPageWidgetState extends State<ProxyPage>
   // UI 状态
   int _currentGroupIndex = 0;
   double _scrollOffsetCache = 0.0;
+  bool _isScrollAnimating = false; // 滚动动画进行中标志
 
   // 持久化键值
   static const String _scrollOffsetKey = 'proxy_page_scroll_offset';
@@ -329,7 +330,10 @@ class _ProxyPageWidgetState extends State<ProxyPage>
           builder: (context, _) {
             return ProxyActionBar(
               selectedGroupName: selectedGroup.name,
-              onLocate: () => _locateSelectedNode(context, clashProvider),
+              onLocate: _isScrollAnimating
+                  ? null
+                  : () => _locateSelectedNode(context, clashProvider),
+              onScrollToTop: _isScrollAnimating ? null : _scrollToTop,
               sortMode: _viewModel.sortMode,
               onSortModeChanged: _viewModel.changeSortMode,
               viewModel: _viewModel,
@@ -445,6 +449,9 @@ class _ProxyPageWidgetState extends State<ProxyPage>
   }
 
   void _locateSelectedNode(BuildContext context, ClashProvider clashProvider) {
+    // 如果正在滚动动画中,不允许执行定位
+    if (_isScrollAnimating) return;
+
     // 实时从 ClashProvider 获取最新的代理组数据
     if (_currentGroupIndex >= clashProvider.proxyGroups.length) {
       Logger.warning('代理组索引越界，无法定位');
@@ -471,10 +478,52 @@ class _ProxyPageWidgetState extends State<ProxyPage>
 
     if (targetOffset == null) return;
 
-    _nodeListScrollController.animateTo(
-      targetOffset,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
-    );
+    // 设置滚动动画标志
+    setState(() {
+      _isScrollAnimating = true;
+    });
+
+    _nodeListScrollController
+        .animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        )
+        .then((_) {
+          // 动画完成后清除标志
+          if (mounted) {
+            setState(() {
+              _isScrollAnimating = false;
+            });
+          }
+        });
+  }
+
+  // 回到顶部
+  void _scrollToTop() {
+    // 如果正在滚动动画中,不允许执行回到顶部
+    if (_isScrollAnimating) return;
+
+    if (_nodeListScrollController.hasClients) {
+      // 设置滚动动画标志
+      setState(() {
+        _isScrollAnimating = true;
+      });
+
+      _nodeListScrollController
+          .animateTo(
+            0,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          )
+          .then((_) {
+            // 动画完成后清除标志
+            if (mounted) {
+              setState(() {
+                _isScrollAnimating = false;
+              });
+            }
+          });
+    }
   }
 }

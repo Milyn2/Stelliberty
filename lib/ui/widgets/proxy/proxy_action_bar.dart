@@ -8,7 +8,8 @@ import 'package:stelliberty/ui/notifiers/proxy_notifier.dart';
 // 代理页面操作按钮栏
 class ProxyActionBar extends StatefulWidget {
   final String selectedGroupName;
-  final VoidCallback onLocate;
+  final VoidCallback? onLocate;
+  final VoidCallback? onScrollToTop;
   final int sortMode;
   final ValueChanged<int> onSortModeChanged;
   final ProxyNotifier viewModel;
@@ -17,6 +18,7 @@ class ProxyActionBar extends StatefulWidget {
     super.key,
     required this.selectedGroupName,
     required this.onLocate,
+    required this.onScrollToTop,
     required this.sortMode,
     required this.onSortModeChanged,
     required this.viewModel,
@@ -86,7 +88,16 @@ class _ProxyActionBarState extends State<ProxyActionBar> {
                   _ActionButton(
                     icon: Icons.gps_fixed,
                     tooltip: context.translate.proxy.locate,
-                    onPressed: state.canLocate ? widget.onLocate : null,
+                    onPressed: state.canLocate && widget.onLocate != null
+                        ? widget.onLocate
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  // 回到顶部按钮
+                  _ActionButton(
+                    icon: Icons.vertical_align_top,
+                    tooltip: context.translate.proxy.scrollToTop,
+                    onPressed: widget.onScrollToTop,
                   ),
                   const SizedBox(width: 8),
                   // 排序按钮
@@ -276,7 +287,7 @@ class _ActionButtonState extends State<_ActionButton> {
 
     // 背景颜色
     Color backgroundColor;
-    if (isDisabled) {
+    if (isDisabled || widget.isLoading) {
       backgroundColor = Colors.transparent;
     } else if (_isHovering) {
       backgroundColor = isDark
@@ -290,9 +301,7 @@ class _ActionButtonState extends State<_ActionButton> {
 
     // 图标颜色
     Color iconColor;
-    if (widget.isLoading) {
-      iconColor = colorScheme.primary;
-    } else if (isDisabled) {
+    if (isDisabled || widget.isLoading) {
       iconColor = colorScheme.onSurface.withValues(alpha: 0.3);
     } else if (_isHovering) {
       iconColor = colorScheme.primary;
@@ -317,22 +326,13 @@ class _ActionButtonState extends State<_ActionButton> {
               color: backgroundColor,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: _isHovering && !isDisabled
+                color: _isHovering && !isDisabled && !widget.isLoading
                     ? colorScheme.primary.withValues(alpha: 0.3)
                     : Colors.transparent,
                 width: 1,
               ),
             ),
-            child: widget.isLoading
-                ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                    ),
-                  )
-                : Icon(widget.icon, size: 18, color: iconColor),
+            child: Icon(widget.icon, size: 18, color: iconColor),
           ),
         ),
       ),

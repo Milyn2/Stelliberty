@@ -607,6 +607,7 @@
     "delaySort": "按延迟排序",
     "scrollLeft": "向左滚动",
     "scrollRight": "向右滚动",
+    "scrollToTop": "回到顶部",
     "startFailed": "启动失败: 没有可用的订阅配置文件，请先添加订阅",
     "proxyStarted": "代理已启动",
     "startFailedWithError": "启动代理失败: {error}",

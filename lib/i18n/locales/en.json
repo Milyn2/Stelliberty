@@ -651,6 +651,7 @@
     "defaultSort": "Default Sort",
     "nameSort": "A-Z Sort",
     "delaySort": "Delay Sort",
+    "scrollToTop": "Scroll to Top",
     "emptyNoSubscription": "No subscription",
     "emptyPleaseAddFirst": "Please add a subscription first",
     "emptyError": "Error occurred",
