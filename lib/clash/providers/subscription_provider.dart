@@ -444,8 +444,11 @@ class SubscriptionProvider extends ChangeNotifier {
         subscription,
       );
 
-      // 更新列表（确保清除错误信息）
-      _subscriptions[index] = updatedSubscription.copyWith(lastError: null);
+      // 更新列表（确保清除错误信息和配置失败标记）
+      _subscriptions[index] = updatedSubscription.copyWith(
+        lastError: null,
+        configLoadFailed: false, // 更新成功后清除配置失败标记
+      );
       await _service.saveSubscriptionList(_subscriptions);
 
       // 如果更新的是当前订阅，则重新加载配置
@@ -1068,6 +1071,17 @@ class SubscriptionProvider extends ChangeNotifier {
       // 保存文件到订阅目录
       await _service.saveLocalSubscription(subscription, content);
       Logger.info('订阅文件已保存：${subscription.name}');
+
+      // 清除配置失败标记（无论是否当前选中）
+      final index = _subscriptions.indexWhere((s) => s.id == subscriptionId);
+      if (index != -1 && _subscriptions[index].configLoadFailed) {
+        _subscriptions[index] = _subscriptions[index].copyWith(
+          configLoadFailed: false,
+        );
+        await _service.saveSubscriptionList(_subscriptions);
+        notifyListeners();
+        Logger.info('已清除订阅 ${subscription.name} 的配置失败标记');
+      }
 
       // 如果是当前选中的订阅，重新加载配置
       if (subscriptionId == _currentSubscriptionId) {
