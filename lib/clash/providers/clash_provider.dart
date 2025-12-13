@@ -482,8 +482,8 @@ class ClashProvider extends ChangeNotifier {
 
       // 阶段 1：优先添加 GLOBAL 组（如果存在）
       if (globalGroup != null) {
-        final globalNode = _proxyNodes['GLOBAL'];
-        if (globalNode != null && globalNode.isGroup) {
+        // 代理组的特征：有 all 字段
+        if (globalGroup['all'] != null) {
           _allProxyGroups.add(ProxyGroup.fromJson('GLOBAL', globalGroup));
           addedGroups.add('GLOBAL');
         }
@@ -498,8 +498,8 @@ class ClashProvider extends ChangeNotifier {
           final proxyData = proxies[groupName];
           if (proxyData == null) continue;
 
-          final node = _proxyNodes[groupName];
-          if (node == null || !node.isGroup) continue;
+          // 代理组的特征：有 all 字段
+          if (proxyData['all'] == null) continue;
 
           _allProxyGroups.add(ProxyGroup.fromJson(groupName, proxyData));
           addedGroups.add(groupName);
@@ -510,8 +510,8 @@ class ClashProvider extends ChangeNotifier {
       proxies.forEach((name, data) {
         if (addedGroups.contains(name)) return;
 
-        final node = _proxyNodes[name];
-        if (node == null || !node.isGroup) return;
+        // 代理组的特征：有 all 字段
+        if (data['all'] == null) return;
 
         _allProxyGroups.add(ProxyGroup.fromJson(name, data));
       });
@@ -623,8 +623,8 @@ class ClashProvider extends ChangeNotifier {
 
       // 阶段 1：优先添加 GLOBAL 组
       if (globalGroup != null) {
-        final globalNode = _proxyNodes['GLOBAL'];
-        if (globalNode != null && globalNode.isGroup) {
+        // 代理组的特征：有 all 字段
+        if (globalGroup['all'] != null) {
           _allProxyGroups.add(ProxyGroup.fromJson('GLOBAL', globalGroup));
           addedGroups.add('GLOBAL');
         }
@@ -639,8 +639,8 @@ class ClashProvider extends ChangeNotifier {
           final proxyData = proxies[groupName];
           if (proxyData == null) continue;
 
-          final node = _proxyNodes[groupName];
-          if (node == null || !node.isGroup) continue;
+          // 代理组的特征：有 all 字段
+          if (proxyData['all'] == null) continue;
 
           _allProxyGroups.add(ProxyGroup.fromJson(groupName, proxyData));
           addedGroups.add(groupName);
@@ -651,8 +651,8 @@ class ClashProvider extends ChangeNotifier {
       proxies.forEach((name, data) {
         if (addedGroups.contains(name)) return;
 
-        final node = _proxyNodes[name];
-        if (node == null || !node.isGroup) return;
+        // 代理组的特征：有 all 字段
+        if (data['all'] == null) return;
 
         _allProxyGroups.add(ProxyGroup.fromJson(name, data));
       });
@@ -916,22 +916,6 @@ class ClashProvider extends ChangeNotifier {
   }
 
   // ========== 延迟测试方法 ==========
-
-  // 递归解析代理节点名称
-  String resolveProxyNodeName(
-    String proxyName, {
-    int maxDepth = 20,
-    Set<String>? visited,
-  }) {
-    return DelayTestService.resolveProxyNodeName(
-      proxyName,
-      _proxyNodes,
-      _allProxyGroups,
-      _selectedMap,
-      maxDepth: maxDepth,
-      visited: visited,
-    );
-  }
 
   // 测试代理延迟（支持代理组）
   Future<int> testProxyDelay(

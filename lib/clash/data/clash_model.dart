@@ -103,39 +103,6 @@ class ProxyNode {
     );
   }
 
-  // 判断是否是代理组
-  bool get isGroup {
-    final lowerType = type.toLowerCase();
-    return lowerType == 'selector' ||
-        lowerType == 'urltest' ||
-        lowerType == 'fallback' ||
-        lowerType == 'loadbalance' ||
-        lowerType == 'relay' ||
-        lowerType == 'load-balance' ||
-        lowerType == 'select';
-  }
-
-  // 判断是否是实际节点
-  bool get isProxy {
-    final lowerType = type.toLowerCase();
-    return lowerType == 'shadowsocks' ||
-        lowerType == 'shadowsocksr' ||
-        lowerType == 'vmess' ||
-        lowerType == 'trojan' ||
-        lowerType == 'snell' ||
-        lowerType == 'http' ||
-        lowerType == 'https' ||
-        lowerType == 'socks5' ||
-        lowerType == 'socks' ||
-        lowerType == 'vless' ||
-        lowerType == 'hysteria' ||
-        lowerType == 'hysteria2' ||
-        lowerType == 'tuic' ||
-        lowerType == 'wireguard' ||
-        lowerType == 'ss' ||
-        lowerType == 'ssr';
-  }
-
   // 获取延迟显示文本
   String get delayText {
     if (delay == null) {

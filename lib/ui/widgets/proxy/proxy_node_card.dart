@@ -149,7 +149,7 @@ class _ProxyNodeCardState extends State<ProxyNodeCard> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            _formatProxyType(widget.node.type),
+                            widget.node.type,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -291,32 +291,6 @@ class _ProxyNodeCardState extends State<ProxyNodeCard> {
         );
       },
     );
-  }
-
-  // 格式化代理协议类型显示（首字母大写）
-  String _formatProxyType(String type) {
-    if (type.isEmpty) return type;
-
-    final lowerType = type.toLowerCase();
-
-    // 特殊处理缩写形式
-    if (lowerType == 'ss') return 'SS';
-    if (lowerType == 'ssr') return 'SSR';
-    if (lowerType == 'http') return 'HTTP';
-    if (lowerType == 'https') return 'HTTPS';
-    if (lowerType == 'socks5') return 'Socks5';
-    if (lowerType == 'socks') return 'Socks';
-
-    // 特殊处理包含数字的协议名
-    if (lowerType == 'hysteria2') return 'Hysteria2';
-
-    // 特殊处理驼峰命名
-    if (lowerType == 'vmess') return 'VMess';
-    if (lowerType == 'vless') return 'VLess';
-    if (lowerType == 'tuic') return 'Tuic';
-
-    // 其他协议首字母大写
-    return type[0].toUpperCase() + type.substring(1).toLowerCase();
   }
 
   // 获取延迟颜色
