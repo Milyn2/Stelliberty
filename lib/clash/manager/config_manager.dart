@@ -185,17 +185,13 @@ class ConfigManager {
         outboundMode: _outboundMode,
       );
 
-      if (runtimeConfigPath != null) {
-        actualConfigPath = runtimeConfigPath;
-      } else {
-        Logger.warning('临时配置生成失败，降级使用原始配置：$configPath');
-        actualConfigPath = configPath;
-      }
-
-      if (actualConfigPath == null) {
-        Logger.error('配置路径为空，无法热重载');
+      // 临时配置生成失败说明原始配置有错误，直接返回失败
+      if (runtimeConfigPath == null) {
+        Logger.error('临时配置生成失败，原始配置存在错误：$configPath');
         return false;
       }
+
+      actualConfigPath = runtimeConfigPath;
 
       final success = await _apiClient.reloadConfig(
         configPath: actualConfigPath,

@@ -144,7 +144,7 @@ class SubscriptionCard extends StatelessWidget {
             // 配置失败警告标记（右下角）
             if (subscription.configLoadFailed)
               Positioned(
-                right: 8,
+                right: 12,
                 bottom: 8,
                 child: ModernTooltip(
                   message: '该配置异常，无法工作',
