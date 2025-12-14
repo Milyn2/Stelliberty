@@ -29,6 +29,7 @@ import 'package:stelliberty/clash/providers/override_provider.dart';
 import 'package:stelliberty/clash/providers/service_provider.dart';
 import 'package:stelliberty/providers/content_provider.dart';
 import 'package:stelliberty/providers/theme_provider.dart';
+import 'package:stelliberty/providers/language_provider.dart';
 import 'package:stelliberty/providers/window_effect_provider.dart';
 import 'package:stelliberty/providers/app_update_provider.dart';
 import 'package:stelliberty/clash/data/override_model.dart' as app_override;
@@ -68,13 +69,10 @@ void main(List<String> args) async {
   // 初始化 Rust 后端通信
   await initializeRust(assignRustSignal);
 
-  // 【关键】先初始化基础服务（路径、配置），再初始化语言
+  // 【关键】先初始化基础服务（路径、配置）
   await initializeBaseServices();
 
-  // 加载语言设置（必须在托盘初始化之前，避免托盘显示英文）
-  await initializeLanguage();
-
-  // 初始化其它应用服务（日志、窗口、托盘等，此时语言已就绪）
+  // 初始化其它应用服务（日志、窗口等）
   final appDataPath = await initializeOtherServices();
 
   // 创建并初始化所有 Providers
@@ -122,6 +120,7 @@ void main(List<String> args) async {
         // --- UI Providers ---
         ChangeNotifierProvider(create: (_) => ContentProvider()),
         ChangeNotifierProvider.value(value: providers.themeProvider),
+        ChangeNotifierProvider.value(value: providers.languageProvider),
         ChangeNotifierProvider.value(value: providers.windowEffectProvider),
         ChangeNotifierProvider.value(value: providers.appUpdateProvider),
       ],
@@ -144,6 +143,7 @@ void main(List<String> args) async {
 class ProviderBundle {
   final ThemeProvider themeProvider;
   final WindowEffectProvider windowEffectProvider;
+  final LanguageProvider languageProvider;
   final SubscriptionProvider subscriptionProvider;
   final OverrideProvider overrideProvider;
   final ClashProvider clashProvider;
@@ -154,6 +154,7 @@ class ProviderBundle {
   const ProviderBundle({
     required this.themeProvider,
     required this.windowEffectProvider,
+    required this.languageProvider,
     required this.subscriptionProvider,
     required this.overrideProvider,
     required this.clashProvider,
@@ -231,16 +232,6 @@ Future<void> initializeWindowServices() async {
 }
 
 // 初始化语言设置
-Future<void> initializeLanguage() async {
-  final savedLanguage = AppPreferences.instance.getLanguageMode();
-  const localeMap = {'zh': AppLocale.zhCn, 'en': AppLocale.en};
-  final locale = localeMap[savedLanguage];
-  if (locale != null) {
-    LocaleSettings.setLocale(locale);
-  } else {
-    LocaleSettings.useDeviceLocale();
-  }
-}
 
 // ============================================================================
 // Provider 工厂（创建、初始化、依赖注入）
@@ -268,6 +259,7 @@ Future<ProviderBundle> createProviders(String appDataPath) async {
   // 创建 Provider 实例
   final themeProvider = ThemeProvider();
   final windowEffectProvider = WindowEffectProvider();
+  final languageProvider = LanguageProvider();
   final subscriptionProvider = SubscriptionProvider(overrideService);
   final overrideProvider = OverrideProvider(overrideService);
   final clashProvider = ClashProvider();
@@ -279,6 +271,7 @@ Future<ProviderBundle> createProviders(String appDataPath) async {
   await Future.wait([
     themeProvider.initialize(),
     windowEffectProvider.initialize(),
+    languageProvider.initialize(),
     subscriptionProvider.initialize(appDataPath),
     overrideProvider.initialize(),
     serviceProvider.initialize(),
@@ -293,6 +286,7 @@ Future<ProviderBundle> createProviders(String appDataPath) async {
   return ProviderBundle(
     themeProvider: themeProvider,
     windowEffectProvider: windowEffectProvider,
+    languageProvider: languageProvider,
     subscriptionProvider: subscriptionProvider,
     overrideProvider: overrideProvider,
     clashProvider: clashProvider,
@@ -424,6 +418,7 @@ Future<ProviderBundle> createFallbackProviders() async {
   return ProviderBundle(
     themeProvider: ThemeProvider(),
     windowEffectProvider: WindowEffectProvider(),
+    languageProvider: LanguageProvider(),
     subscriptionProvider: SubscriptionProvider(overrideService),
     overrideProvider: OverrideProvider(overrideService),
     clashProvider: ClashProvider(),

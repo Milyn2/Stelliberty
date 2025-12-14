@@ -359,7 +359,10 @@
     "settings": "Language Settings",
     "modeSystem": "Auto",
     "modeZh": "简体中文",
-    "modeEn": "English"
+    "modeZhTw": "繁體中文",
+    "modeEn": "English",
+    "modeJa": "日本語",
+    "modeKo": "한국어"
   },
   "about": {
     "title": "About",
